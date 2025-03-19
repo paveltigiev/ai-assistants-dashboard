@@ -7,13 +7,13 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'DashboardLayout',
-      component: () => import('@/layouts/DashboardLayout.vue'),
-      // redirect: '/dashboard',
-      // meta: {
-      //   requiresAuth: true
-      // },
+      path: "/",
+      redirect: "/dashboard",
+    },
+    {
+      path: "/",
+      name: "DashboardLayout",
+      component: () => import("@/layouts/DashboardLayout.vue"),
       children: [
         {
           path: '/dashboard',
@@ -28,13 +28,12 @@ const router = createRouter({
         {
           path: '/chats/:id',
           name: 'Chat',
-          params: true,
           component: () => import('@/views/chats/ChatView.vue')
         }
       ]
     },
     {
-      path: '/user',
+      path: '/signin',
       name: 'CleanLayout',
       component: () => import('@/layouts/CleanLayout.vue'),
       children: [

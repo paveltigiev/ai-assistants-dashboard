@@ -22,7 +22,7 @@
           </template>
 
           <TableRow v-else>
-            <TableCell class="h-24 text-center">
+            <TableCell colspan="3" class="h-24 text-center">
               Нет чатов
             </TableCell>
           </TableRow>
@@ -33,9 +33,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
+import { onMounted, computed } from "vue"
 import { useRouter } from 'vue-router'
-import { supabase } from "@/lib/supabaseClient"
 import { useChatStore } from "@/store/chatStore"
 import { formatDate } from "@/helpers/date"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -46,7 +45,6 @@ const chatStore = useChatStore();
 
 const chats = computed(() => {
   const data = chatStore.chats.map((chat) => {
-    let username = chat.users[chat.users.length - 1]
     return {
       username: chat.users[chat.users.length - 1],
       created_at: formatDate(chat.created_at),

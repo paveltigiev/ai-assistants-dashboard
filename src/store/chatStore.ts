@@ -12,7 +12,7 @@ export const useChatStore = defineStore('chat', () => {
     chats.value = await fetchChats()
   }
 
-  const setChat = async(chat_id: string) => {
+  const setChat = async(chat_id: number) => {
     messages.value = await fetchMessages(chat_id)
   }
 

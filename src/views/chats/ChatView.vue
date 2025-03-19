@@ -7,7 +7,7 @@
           <div :class="['message', { 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }]">
             <div class="message-username">{{ message.username }}</div>
             <div class="message-time">{{ formatDate(message.created_at) }}</div>
-            <div class="message-content" v-html="message.text"></div>
+            <div class="message-content">{{ message.text }}</div>
           </div>
         </div>
       </div>
@@ -24,14 +24,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
-import { supabase } from "@/lib/supabaseClient"
+import { onMounted, computed } from "vue"
 import { useChatStore } from "@/store/chatStore"
 import { formatDate } from "@/helpers/date"
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const chat_id = route.params.chatId as string
 const chatStore = useChatStore()
 
 const messages = computed(() => {
@@ -45,8 +43,9 @@ const userInfo =computed(() => {
 })
 
 onMounted(async () => {
-  if (route.params.id) {
-    chatStore.setChat(route.params.id)
+  const chatId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+  if (chatId) {
+    chatStore.setChat(+chatId)
   }
 })
 </script>

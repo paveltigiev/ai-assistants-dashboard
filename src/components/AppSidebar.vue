@@ -31,9 +31,13 @@ const data = {
       url: '#',
       items: [
         {
+          title: 'Дашборд',
+          url: '/',
+        },
+        {
           title: 'Чаты с пользователями',
-          url: '#',
-          isActive: true,
+          url: '/chats',
+          // isActive: true,
         },
         {
           title: 'Статистика использования',
