@@ -37,7 +37,7 @@ const data = {
         {
           title: 'Чаты с пользователями',
           url: '/chats',
-          // isActive: true,
+          isActive: true,
         },
         {
           title: 'Статистика использования',
