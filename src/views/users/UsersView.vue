@@ -178,7 +178,10 @@ const onSubmit = async () => {
     const updatedUser = {
       ...selectedUser.value,
       role: role.value,
-      status: status.value
+      status: status.value,
+      onboarded_at: status.value === 'active' && !selectedUser.value.onboarded_at 
+        ? new Date().toISOString() 
+        : selectedUser.value.onboarded_at
     }
     await userStore.updateUserProfile(updatedUser)
     await userStore.setUserProfiles()
