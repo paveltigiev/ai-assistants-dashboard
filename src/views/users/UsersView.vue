@@ -10,6 +10,7 @@
             <TableHead>Статус</TableHead>
             <TableHead>Дата регистрации</TableHead>
             <TableHead>Дата онбординга</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -41,7 +42,7 @@
 
           <TableRow v-else>
             <TableCell colspan="3" class="h-24 text-center">
-              Нет пользователей
+              Загрузка пользователей...
             </TableCell>
           </TableRow>
         </TableBody>

@@ -24,7 +24,7 @@
 
           <TableRow v-else>
             <TableCell colspan="3" class="h-24 text-center">
-              Нет промптов
+              Загрузка промптов...
             </TableCell>
           </TableRow>
         </TableBody>
