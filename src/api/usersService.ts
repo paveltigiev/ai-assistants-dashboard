@@ -33,3 +33,21 @@ export const fetchUserProfile  = async (telegram_id: number): Promise<UserProfil
     return {} as UserProfile
   }
 }
+
+export const updateUserProfile = async (user: UserProfile) => {
+  try {
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .update(user)
+      .eq("id", user.id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    console.log((error as Error).message)
+    return null
+  }
+}

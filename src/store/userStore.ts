@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { fetchUserProfiles, fetchUserProfile } from '@/api/usersService'
+import { fetchUserProfiles, fetchUserProfile, updateUserProfile as updateUserProfileApi } from '@/api/usersService'
 import type { UserProfile } from '@/types/userTypes'
 
 export const useUserStore = defineStore('user', () => {
@@ -16,7 +16,11 @@ export const useUserStore = defineStore('user', () => {
     userProfile.value = await fetchUserProfile(telegram_id)
   }
 
+  const updateUserProfile = async(user: UserProfile) => {
+    return await updateUserProfileApi(user)
+  }
+
   return {
-    userProfiles, userProfile, setUserProfiles, setUserProfile
+    userProfiles, userProfile, setUserProfiles, setUserProfile, updateUserProfile
   }
 })
