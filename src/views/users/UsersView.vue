@@ -19,8 +19,8 @@
                 <TableCell>{{ `${row.profile.first_name} ${row.profile.last_name}` }}</TableCell>
                 <TableCell>{{ row.role }}</TableCell>
                 <TableCell>{{ row.status }}</TableCell>
-                <TableCell>{{ formatDate(row.created_at) }}</TableCell>
-                <TableCell>{{ formatDate(row.onboarded_at) }}</TableCell>
+                <TableCell>{{ row.created_at ? formatDate(row.created_at) : '-' }}</TableCell>
+                <TableCell>{{ row.onboarded_at ? formatDate(row.onboarded_at) : '-' }}</TableCell>
               </TableRow>
             </template>
           </template>

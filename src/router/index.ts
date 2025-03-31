@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// const isAuthenticated = () => {
-//   return !!localStorage.getItem('token')
-// }
+import { supabase } from '@/lib/supabaseClient'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +12,9 @@ const router = createRouter({
       path: "/",
       name: "DashboardLayout",
       component: () => import("@/layouts/DashboardLayout.vue"),
+      meta: {
+        requiresAuth: true
+      },
       children: [
         {
           path: '/dashboard',
@@ -40,19 +41,41 @@ const router = createRouter({
         {
           path: '/signin',
           name: 'signin',
-          component: () => import('@/views/user/SignIn.vue')
+          component: () => import('@/views/auth/SignIn.vue')
+        },
+        {
+          path: '/terms',
+          name: 'terms',
+          component: () => import('@/views/static/TermsPage.vue')
         }
       ]
     }
   ]
 })
 
-// router.beforeEach(async (to, from, next) => {
-//   if (to.matched.some((record) => record.meta.requiresAuth) && !isAuthenticated()) {
-//     next({ name: 'login' })
-//   } else {
-//     next()
-//   }
-// })
+// Navigation guard to check authentication
+router.beforeEach(async (to, from, next) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  // If the route requires authentication
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // If user is not authenticated, redirect to signin
+    if (!session) {
+      next({
+        path: '/signin',
+        query: { redirect: to.fullPath }
+      })
+    } else {
+      next()
+    }
+  } else {
+    // If user is authenticated and tries to access signin page, redirect to dashboard
+    if (session && to.path === '/signin') {
+      next({ path: '/dashboard' })
+    } else {
+      next()
+    }
+  }
+})
 
 export default router

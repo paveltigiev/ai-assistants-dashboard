@@ -18,10 +18,30 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Icon } from '@iconify/vue'
 import { useColorMode } from '@vueuse/core'
 import { Button } from '@/components/ui/button'
+import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
 
 const props = defineProps<SidebarProps>()
-
+const router = useRouter()
 const mode = useColorMode()
+
+const userWorkspace = ref<{ workspace_id: number } | null>(null)
+
+onMounted(async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('workspace_id')
+      .eq('telegram_id', user.id)
+      .single()
+    
+    if (profile) {
+      userWorkspace.value = profile
+    }
+  }
+})
 
 const data = {
   versions: ['@delikat_onboarding'],
@@ -61,6 +81,11 @@ const data = {
     }
   ],
 }
+
+const handleLogout = () => {
+  supabase.auth.signOut()
+  router.push('/signin')
+}
 </script>
 
 <template>
@@ -90,27 +115,31 @@ const data = {
     <SidebarRail />
 
     <div class="relative flex w-full min-w-0 flex-col p-2">
-      <div>
+      <div class="flex items-center justify-between">
+        <Button variant="outline" @click="handleLogout">Выйти</Button>
         <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button variant="outline">
-            <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span class="sr-only">Toggle theme</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem @click="mode = 'light'">
-            Light
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="mode = 'dark'">
-            Dark
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="mode = 'auto'">
-            System
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline">
+              <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span class="sr-only">Toggle theme</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @click="mode = 'light'">
+              Light
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="mode = 'dark'">
+              Dark
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="mode = 'auto'">
+              System
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div v-if="userWorkspace" class="mt-2 text-xs text-muted-foreground">
+        Workspace ID: {{ userWorkspace.workspace_id }}
       </div>
     </div>
   </Sidebar>
