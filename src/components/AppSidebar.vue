@@ -27,7 +27,7 @@ const data = {
   versions: ['@delikat_onboarding'],
   navMain: [
     {
-      title: 'Чаты и сообщения',
+      title: 'Пользователи и чаты',
       url: '#',
       items: [
         {
@@ -35,8 +35,8 @@ const data = {
           url: '/',
         },
         {
-          title: 'Чаты с пользователями',
-          url: '/chats',
+          title: 'Пользователи',
+          url: '/users',
           isActive: true,
         },
         {
@@ -50,11 +50,11 @@ const data = {
       url: '#',
       items: [
         {
-          title: 'База знаний',
+          title: 'Промпты',
           url: '#',
         },
         {
-          title: 'инструкции',
+          title: 'Роли',
           url: '#',
         },
       ],

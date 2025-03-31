@@ -15,9 +15,45 @@
     <div class="user-info w-1/2">
       <h1 class="text-2xl font-semibold mb-4">Информация о пользователе</h1>
       <div class=" border rounded-md p-4">
-        <pre>
-          {{ userInfo }}
-        </pre>
+        <div v-if="userProfile" class="space-y-2">
+          <div class="flex gap-2">
+            <span class="font-medium">Имя:</span>
+            <span>{{ userProfile?.profile?.first_name }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Фамилия:</span>
+            <span>{{ userProfile?.profile?.last_name }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Telegram ID:</span>
+            <span>{{ userProfile?.telegram_id }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Username:</span>
+            <span><a :href="`https://t.me/${userProfile?.profile?.username}`" target="_blank">@{{ userProfile?.profile?.username }}</a></span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Роль:</span>
+            <span>{{ userProfile?.role }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Статус:</span>
+            <span>{{ userProfile?.status }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Дата регистрации:</span>
+            <span>{{ formatDate(userProfile?.created_at) }}</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="font-medium">Дата онбординга:</span>
+            <span v-if="userProfile?.onboarded_at">{{ formatDate(userProfile?.onboarded_at) }}</span>
+            <span v-else>Не выполнен</span>
+          </div>
+        </div>
+        <div v-else class="text-center text-gray-500">
+          Информация о пользователе не найдена
+        </div>
+
       </div>
     </div>
   </div>
@@ -28,24 +64,21 @@ import { onMounted, computed } from "vue"
 import { useChatStore } from "@/store/chatStore"
 import { formatDate } from "@/helpers/date"
 import { useRoute } from 'vue-router'
+import { useUserStore } from "@/store/userStore"
 
 const route = useRoute()
 const chatStore = useChatStore()
+const userStore = useUserStore()
 
-const messages = computed(() => {
-  return chatStore.messages
-})
+const messages = computed(() => chatStore.messages)
 
-const userInfo =computed(() => {
-  const info = messages.value.find(message => message.role === "user")
-
-  return info
-})
+const userProfile = computed(() => userStore.userProfile)
 
 onMounted(async () => {
   const chatId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
   if (chatId) {
     chatStore.setChat(+chatId)
+    userStore.setUserProfile(+chatId)
   }
 })
 </script>
