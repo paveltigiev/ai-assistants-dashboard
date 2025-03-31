@@ -54,7 +54,7 @@ const router = createRouter({
 })
 
 // Navigation guard to check authentication
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const { data: { session } } = await supabase.auth.getSession()
   
   // If the route requires authentication
