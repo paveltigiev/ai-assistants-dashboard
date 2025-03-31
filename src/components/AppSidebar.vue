@@ -20,28 +20,12 @@ import { useColorMode } from '@vueuse/core'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = defineProps<SidebarProps>()
 const router = useRouter()
+const route = useRoute()
 const mode = useColorMode()
-
-const userWorkspace = ref<{ workspace_id: number } | null>(null)
-
-onMounted(async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('workspace_id')
-      .eq('telegram_id', user.id)
-      .single()
-    
-    if (profile) {
-      userWorkspace.value = profile
-    }
-  }
-})
 
 const data = {
   versions: ['@delikat_onboarding'],
@@ -52,17 +36,12 @@ const data = {
       items: [
         {
           title: 'Дашборд',
-          url: '/',
+          url: '/dashboard',
         },
         {
           title: 'Пользователи',
           url: '/users',
-          isActive: true,
-        },
-        {
-          title: 'Статистика использования',
-          url: '#',
-        },
+        }
       ],
     },
     {
@@ -71,12 +50,8 @@ const data = {
       items: [
         {
           title: 'Промпты',
-          url: '#',
-        },
-        {
-          title: 'Роли',
-          url: '#',
-        },
+          url: '/settings/prompts',
+        }
       ],
     }
   ],
@@ -104,7 +79,7 @@ const handleLogout = () => {
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="childItem in item.items" :key="childItem.title">
-              <SidebarMenuButton as-child :is-active="childItem.isActive">
+              <SidebarMenuButton as-child :is-active="route.path === childItem.url">
                 <router-link :to="childItem.url">{{ childItem.title }}</router-link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -137,9 +112,6 @@ const handleLogout = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-      <div v-if="userWorkspace" class="mt-2 text-xs text-muted-foreground">
-        Workspace ID: {{ userWorkspace.workspace_id }}
       </div>
     </div>
   </Sidebar>

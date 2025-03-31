@@ -12,6 +12,7 @@ const router = createRouter({
       path: "/",
       name: "DashboardLayout",
       component: () => import("@/layouts/DashboardLayout.vue"),
+      redirect: '/dashboard',
       meta: {
         requiresAuth: true
       },
@@ -30,6 +31,19 @@ const router = createRouter({
           path: '/chats/:id',
           name: 'Chat',
           component: () => import('@/views/chats/ChatView.vue')
+        },
+        {
+          path: '/settings',
+          name: 'Settings',
+          component: () => import('@/views/settings/SettingsView.vue'),
+          redirect: '/settings/roles',
+          children: [
+            {
+              path: '/settings/prompts',
+              name: 'Prompts',
+              component: () => import('@/views/settings/PromptsView.vue')
+            }
+          ]
         }
       ]
     },

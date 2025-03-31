@@ -74,7 +74,7 @@ supabase.auth.onAuthStateChange((event, session) => {
                     id="email"
                     v-model="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="admin@mail.com"
                     required
                   />
                   <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
