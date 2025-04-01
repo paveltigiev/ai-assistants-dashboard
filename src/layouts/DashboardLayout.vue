@@ -24,7 +24,7 @@
     
     return pathSegments.map((segment, index) => {
       const path = '/' + pathSegments.slice(0, index + 1).join('/')
-      const title = segment.charAt(0).toUpperCase() + segment.slice(1)
+      const title = route.matched[index]?.name || segment.charAt(0).toUpperCase() + segment.slice(1)
       
       return {
         title,
@@ -44,11 +44,8 @@
         <Separator orientation="vertical" class="mr-2 h-4" />
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Главная</BreadcrumbLink>
-            </BreadcrumbItem>
-            <template v-for="(item, _index) in getBreadcrumbItems()" :key="item.path">
-              <BreadcrumbSeparator />
+            <template v-for="(item, index) in getBreadcrumbItems()" :key="item.path">
+              <BreadcrumbSeparator v-if="index > 0" />
               <BreadcrumbItem>
                 <BreadcrumbLink v-if="!item.isLast" :href="item.path">
                   {{ item.title }}

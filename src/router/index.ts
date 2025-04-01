@@ -10,37 +10,38 @@ const router = createRouter({
     },
     {
       path: "/",
-      name: "DashboardLayout",
+      name: "Главная",
       component: () => import("@/layouts/DashboardLayout.vue"),
-      redirect: '/dashboard',
+      // redirect: '/dashboard',
+      redirect: '/users',
       meta: {
         requiresAuth: true
       },
       children: [
         {
           path: '/dashboard',
-          name: 'dashboard',
-          component: () => import('@/views/DashboardView.vue')
+          name: 'Дашборд',
+          redirect: '/users'
         },
         {
           path: '/users',
-          name: 'Users',
+          name: 'Пользователи',
           component: () => import('@/views/users/UsersView.vue')
         },
         {
-          path: '/chats/:id',
-          name: 'Chat',
-          component: () => import('@/views/chats/ChatView.vue')
+          path: '/users/:id',
+          name: 'Пользователь',
+          component: () => import('@/views/users/UserView.vue')
         },
         {
           path: '/settings',
-          name: 'Settings',
+          name: 'Настройки',
           component: () => import('@/views/settings/SettingsView.vue'),
           redirect: '/settings/roles',
           children: [
             {
               path: '/settings/prompts',
-              name: 'Prompts',
+              name: 'Шаблоны',
               component: () => import('@/views/settings/PromptsView.vue')
             }
           ]
