@@ -1,7 +1,8 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { Role, Prompt } from '@/types/settingsTypes'
+import type { Role, Prompt, Scheduler } from '@/types/settingsTypes'
 
 type CreatePrompt = Omit<Prompt, 'id'>
+type CreateScheduler = Omit<Scheduler, 'id'>
 
 export const fetchRoles  = async (): Promise<Role[]> => {
   try {
@@ -63,5 +64,69 @@ export const createPrompt = async (prompt: CreatePrompt) => {
   } catch (error) {
     console.log( (error as Error).message)
     return null
+  }
+}
+
+export const fetchSchedulers  = async (): Promise<Scheduler[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("schedulers")
+      .select("*")
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    console.log( (error as Error).message)
+    return []
+  }
+}
+
+export const updateScheduler = async (scheduler: Scheduler) => {
+  try {
+    const { data, error } = await supabase
+      .from("schedulers")
+      .update(scheduler)
+      .eq("id", scheduler.id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    console.log( (error as Error).message)
+    return null
+  }
+}
+
+export const createScheduler = async (scheduler: CreateScheduler) => {
+  try {
+    const { data, error } = await supabase
+      .from("schedulers")
+      .insert(scheduler)
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    console.log( (error as Error).message)
+    return null
+  }
+}
+
+export const deleteScheduler = async (id: number) => {
+  try {
+    const { error } = await supabase
+      .from("schedulers")
+      .delete()
+      .eq("id", id)
+
+    if (error) throw error
+
+    return true
+  } catch (error) {
+    console.log((error as Error).message)
+    return false
   }
 }

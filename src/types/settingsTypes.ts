@@ -11,3 +11,12 @@ export type Prompt = {
   role: string
   prompt: string
 }
+
+export type Scheduler = {
+  id: number
+  role: string
+  days_after: number
+  day_hour: number
+  prompt: string
+  workspace_id: number
+}

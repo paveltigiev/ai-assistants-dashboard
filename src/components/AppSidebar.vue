@@ -51,6 +51,10 @@ const data = {
         {
           title: 'Промпты',
           url: '/settings/prompts',
+        },
+        {
+          title: 'Рассылки',
+          url: '/settings/schedulers',
         }
       ],
     }

@@ -43,6 +43,11 @@ const router = createRouter({
               path: '/settings/prompts',
               name: 'Шаблоны',
               component: () => import('@/views/settings/PromptsView.vue')
+            },
+            {
+              path: '/settings/schedulers',
+              name: 'Рассылки',
+              component: () => import('@/views/settings/SchedulersView.vue')
             }
           ]
         }
