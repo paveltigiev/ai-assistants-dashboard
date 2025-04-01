@@ -24,7 +24,7 @@ export const fetchMessages  = async (chat_id: number): Promise<Message[]> => {
       .from('messages')
       .select('*')
       .eq('chat_id', chat_id)
-
+      .order('created_at', { ascending: false })
     if (error) throw error
 
     return messages

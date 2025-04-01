@@ -295,7 +295,7 @@ onMounted(async () => {
 }
 
 .chat {
-  height: calc(100vh - 8rem);
+  height: calc(100vh - 14rem);
   overflow-y: auto;
   padding-right: 1rem;
 }
