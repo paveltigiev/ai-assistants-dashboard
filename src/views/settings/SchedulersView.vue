@@ -164,7 +164,7 @@ const schedulers = computed(() => settingsStore.schedulers)
 
 const formSchema = toTypedSchema(z.object({
   role: z.string().min(1, 'Роль обязательна'),
-  days_after: z.number().min(1, 'Количество дней обязательно'),
+  days_after: z.number().min(0, 'Количество дней обязательно'),
   day_hour: z.number().min(0, 'Время обязательно'),
   prompt: z.string().min(1, 'Промпт обязателен'),
 }))
