@@ -32,6 +32,20 @@
                     </Tooltip>
                   </TooltipProvider>
 
+                  <TooltipProvider v-else-if="row.role === 'scheduler'">
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <div class="flex items-center gap-1">
+                          <span class="text-blue-500">{{ row.role }}</span>
+                          <Info class="h-4 w-4 text-gray-500" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Системный промпт, подставляется во все рассылки</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
                   <TooltipProvider v-else-if="row.role === 'master'">
                     <Tooltip>
                       <TooltipTrigger as-child>
@@ -78,7 +92,14 @@
           </div>
         </div>
 
-        <div class="mb-4 flex items-center gap-2 border rounded-lg px-2 py-2" v-if="selectedPrompt?.role === 'master'">
+        <div class="mb-1 flex items-center gap-2 border rounded-lg px-2 py-2" v-if="selectedPrompt?.role === 'scheduler'">
+          <Info class="h-4 w-4" />
+          <div class="text-xs">
+              Промпт с названием <strong class="text-blue-500">scheduler</strong> используется как системный и подставляется во все рассылки
+          </div>
+        </div>
+
+        <div class="mb-1 flex items-center gap-2 border rounded-lg px-2 py-2" v-if="selectedPrompt?.role === 'master'">
           <Info class="h-4 w-4" />
           <div class="text-xs">
             Промпт с названием <strong class="text-orange-500">master</strong> используется если промпт пользователя не найден
@@ -166,6 +187,8 @@ const prompts = computed(() => {
   return [...settingsStore.prompts].sort((a, b) => {
     if (a.role === 'system') return -1
     if (b.role === 'system') return 1
+    if (a.role === 'scheduler') return -1 
+    if (b.role === 'scheduler') return 1
     if (a.role === 'master') return -1 
     if (b.role === 'master') return 1
     return 0
