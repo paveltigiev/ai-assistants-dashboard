@@ -34,10 +34,10 @@ const data = {
       title: 'Пользователи и чаты',
       url: '#',
       items: [
-        {
-          title: 'Дашборд',
-          url: '/dashboard',
-        },
+        // {
+        //   title: 'Дашборд',
+        //   url: '/dashboard',
+        // },
         {
           title: 'Пользователи',
           url: '/users',
