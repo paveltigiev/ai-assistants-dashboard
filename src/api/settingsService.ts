@@ -72,6 +72,7 @@ export const fetchSchedulers  = async (): Promise<Scheduler[]> => {
     const { data, error } = await supabase
       .from("schedulers")
       .select("*")
+      .order('days_after', { ascending: false })
 
     if (error) throw error
 

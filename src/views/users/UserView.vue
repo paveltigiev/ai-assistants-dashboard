@@ -165,7 +165,6 @@ import { onMounted, computed, ref } from "vue"
 import { useChatStore } from "@/store/chatStore"
 import { useRoute } from 'vue-router'
 import { useUserStore } from "@/store/userStore"
-import { Input } from '@/components/ui/input'
 import { useForm, useField } from 'vee-validate'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -186,7 +185,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-// import type { UserProfile } from '@/types/userTypes'
 import {
   Select,
   SelectContent,
@@ -203,25 +201,12 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Icon } from '@iconify/vue'
-import type { Role } from '@/types/settingsTypes'
-import {
-  Calendar,
-  CalendarCell,
-  CalendarCellTrigger,
-  CalendarGrid,
-  CalendarGridBody,
-  CalendarGridHead,
-  CalendarGridRow,
-  CalendarHeadCell,
-  CalendarHeader,
-  CalendarHeading,
-  CalendarNextButton,
-  CalendarPrevButton,
-} from '@/components/ui/calendar'
+import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { fetchRoles } from '@/api/settingsService'
 import { parseDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
+import type { Role } from '@/types/settingsTypes'
 
 const route = useRoute()
 const chatId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;

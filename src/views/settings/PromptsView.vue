@@ -16,8 +16,8 @@
           <template v-if="prompts.length">
             <template v-for="row in prompts" :key="row.id">
               <TableRow class="cursor-pointer" @click="handleRowClick(row)">
-                <TableCell>{{ row.role }}</TableCell>
-                <TableCell>{{ row.prompt.slice(0, 100) }}...</TableCell>
+                <TableCell class="w-2/12">{{ row.role }}</TableCell>
+                <TableCell class="w-10/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
           </template>

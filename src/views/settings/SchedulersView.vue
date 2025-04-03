@@ -12,28 +12,22 @@
             <TableHead>Дней после</TableHead>
             <TableHead>Время</TableHead>
             <TableHead>Промпт</TableHead>
-            <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <template v-if="schedulers.length">
             <template v-for="row in schedulers" :key="row.id">
               <TableRow class="cursor-pointer" @click="handleRowClick(row)">
-                <TableCell>{{ row.role }}</TableCell>
-                <TableCell>{{ row.days_after }}</TableCell>
-                <TableCell>{{ row.day_hour }}</TableCell>
-                <TableCell>{{ row.prompt }}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon" @click.stop="handleDelete(row)">
-                    <Icon icon="heroicons:trash" class="h-4 w-4 text-destructive" />
-                  </Button>
-                </TableCell>
+                <TableCell class="w-1/12">{{ row.role }}</TableCell>
+                <TableCell class="w-1/12">{{ row.days_after }}</TableCell>
+                <TableCell class="w-1/12">{{ row.day_hour }}</TableCell>
+                <TableCell class="w-8/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
           </template>
 
           <TableRow v-else>
-            <TableCell colspan="3" class="h-24 text-center">
+            <TableCell colspan="4" class="h-24 text-center">
               Загрузка рассылок...
             </TableCell>
           </TableRow>
@@ -53,9 +47,18 @@
           <FormField name="role">
             <FormItem>
               <FormLabel>Роль</FormLabel>
-              <FormControl>
-                <Input v-model="role" placeholder="Введите роль" />
-              </FormControl>
+                <FormControl>
+                  <Select v-model="role">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите роль" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="role in roles" :key="role.id" :value="role.role">
+                        {{ role.role }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
               <FormMessage />
             </FormItem>
           </FormField>
@@ -84,17 +87,22 @@
                 <Textarea
                   v-model="prompt"
                   placeholder="Введите промпт"
-                  class="min-h-[200px]"
+                  class="min-h-[100px]"
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           </FormField>
-          <div class="flex justify-end gap-2">
-            <Button type="button" variant="outline" @click="isDialogOpen = false">
-              Отмена
+          <div class="flex justify-between gap-2">
+            <Button v-if="selectedScheduler" type="button" variant="destructive" @click="handleDelete(selectedScheduler)">
+              Удалить
             </Button>
-            <Button type="submit">Сохранить</Button>
+            <div class="flex gap-2">
+              <Button type="button" variant="outline" @click="isDialogOpen = false">
+                Отмена
+              </Button>
+              <Button type="submit">Сохранить</Button>
+            </div>
           </div>
         </form>
       </DialogContent>
@@ -105,6 +113,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue"
 import { useSettingsStore } from "@/store/settingsStore"
+import { fetchRoles } from '@/api/settingsService'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   Dialog,
@@ -120,6 +129,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -127,8 +143,10 @@ import { useForm, useField } from 'vee-validate'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { createScheduler, updateScheduler, deleteScheduler } from '@/api/settingsService'
-import type { Scheduler } from '@/types/settingsTypes'
 import { Icon } from '@iconify/vue'
+
+import type { Scheduler } from '@/types/settingsTypes'
+import type { Role } from '@/types/settingsTypes'
 
 interface FormValues {
   role: string
@@ -140,6 +158,7 @@ interface FormValues {
 
 type CreateScheduler = Omit<Scheduler, 'id'>
 
+const roles = ref<Role[]>([])
 const settingsStore = useSettingsStore();
 const schedulers = computed(() => settingsStore.schedulers)
 
@@ -193,6 +212,7 @@ const handleDelete = async (row: Scheduler) => {
   if (confirm('Вы уверены, что хотите удалить эту рассылку?')) {
     await deleteScheduler(row.id)
     await settingsStore.setSchedulers()
+    isDialogOpen.value = false
   }
 }
 
@@ -224,7 +244,10 @@ const onSubmit = async () => {
   }
 }
 
-onMounted(async () => settingsStore.setSchedulers())
+onMounted(async () => {
+  settingsStore.setSchedulers()
+  roles.value = await fetchRoles()
+})
 </script>
 
 <style>
