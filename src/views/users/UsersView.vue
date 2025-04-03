@@ -30,7 +30,7 @@
           </template>
 
           <TableRow v-else>
-            <TableCell colspan="3" class="h-24 text-center">
+            <TableCell colspan="5" class="h-24 text-center">
               Загрузка пользователей...
             </TableCell>
           </TableRow>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from "vue"
+import { onMounted, computed, ref } from "vue"
 import { useRouter } from 'vue-router'
 import { useUserStore } from "@/store/userStore"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -55,7 +55,9 @@ const userProfiles = computed(() => userStore.userProfiles)
 
 const showChat = (telegram_id: number) => router.push(`/users/${telegram_id}`)
 
-onMounted(async () => userStore.setUserProfiles())
+onMounted(async () => {
+  userStore.setUserProfiles()
+})
 </script>
 
 <style>

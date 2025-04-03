@@ -12,10 +12,13 @@
               <div :class="['message', { 'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant' }]">
                 <div class="message__header">
                   <div class="message__header-username">{{ message.username }}</div>
-                  <div class="message__header-time">{{ formatDate(message.created_at) }}</div>
+                  <div class="message__header-time">{{ formatDate(message.created_at, 'HH:mm DD.MM.YYYY') }}</div>
                 </div>
                 <div class="message__content">{{ message.text }}</div>
               </div>
+            </div>
+            <div v-if="!messages.length" class="flex items-center justify-center h-24 text-gray-500">
+              Нет сообщений
             </div>
           </div>
         </CardContent>
@@ -23,46 +26,40 @@
     </div>
     <div class="user-info w-1/3">
       <Card>
-        <CardHeader>
-          <div class="flex justify-between items-center">
-            <div>
-              <CardTitle>Пользователь</CardTitle>
-              <CardDescription>Информация о пользователе</CardDescription>
-            </div>
-            <Button @click="editUser" class="">
-              <Icon icon="heroicons:pencil" class="mr-2" />
-              Редактировать
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent class="relative">
-          <div v-if="userProfile" class="space-y-2">
+        <CardContent class="relative mt-4">
+          <div v-if="userProfile" class="flex flex-col gap-2">
             <div class="flex gap-2">
-              <span class="font-medium">Имя:</span>
-              <span>{{ userProfile?.profile?.first_name }}</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="font-medium">Фамилия:</span>
-              <span>{{ userProfile?.profile?.last_name }}</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="font-medium">Telegram ID:</span>
-              <span>{{ userProfile?.telegram_id }}</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="font-medium">Username:</span>
-              <span><a :href="`https://t.me/${userProfile?.profile?.username}`" target="_blank">@{{ userProfile?.profile?.username }}</a></span>
+              {{ userProfile?.profile?.first_name || '' }} {{ userProfile?.profile?.last_name || '' }}
+              <Badge :variant="getStatusVariant(userProfile?.status)">
+                {{ getStatusLabel(userProfile?.status) }}
+              </Badge>
             </div>
             <div class="flex gap-2">
               <span class="font-medium">Роль:</span>
               <span>{{ userProfile?.role }}</span>
             </div>
+
+            <Button @click="editUser" class="" size="xs" variant="outline">
+              <Icon icon="heroicons:pencil" class="" />
+              Редактировать
+            </Button>
+          </div>
+
+        </CardContent>
+        
+        <hr class="mb-4" />
+        
+        <CardContent>
+          <div v-if="userProfile" class="flex flex-col gap-2">
             <div class="flex gap-2">
-              <span class="font-medium">Статус:</span>
-              <Badge :variant="getStatusVariant(userProfile?.status)">
-                {{ getStatusLabel(userProfile?.status) }}
-              </Badge>
+              <span class="font-medium">Telegram ID:</span>
+              <span>{{ userProfile?.telegram_id }}</span>
             </div>
+            <div class="flex gap-2" v-if="userProfile?.profile?.username">
+              <span class="font-medium">Username:</span>
+              <span><a :href="`https://t.me/${userProfile?.profile?.username}`" target="_blank">@{{ userProfile?.profile?.username }}</a></span>
+            </div>
+
             <div class="flex gap-2">
               <span class="font-medium">Дата регистрации:</span>
               <span>{{ formatDate(userProfile?.created_at) }}</span>
@@ -93,7 +90,16 @@
             <FormItem>
               <FormLabel>Роль</FormLabel>
               <FormControl>
-                <Input v-model="role" placeholder="Введите роль" />
+                <Select v-model="role">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите роль" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="role in roles" :key="role.id" :value="role.role">
+                      {{ role.role }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,6 +118,32 @@
                     <SelectItem value="blocked">Заблокирован</SelectItem>
                   </SelectContent>
                 </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+          <FormField name="onboarded_at">
+            <FormItem>
+              <FormLabel>Дата онбординга</FormLabel>
+              <FormControl>
+                <Popover>
+                  <PopoverTrigger as-child>
+                    <Button
+                      variant="outline"
+                      class="w-full justify-start text-left font-normal"
+                      :class="{ 'text-muted-foreground': !onboarded_at }"
+                    >
+                      <Icon icon="heroicons:calendar" class="mr-2 h-4 w-4" />
+                      {{ onboarded_at ? formatDate(onboarded_at) : 'Выберите дату' }}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0">
+                    <Calendar
+                      :model-value="getDateValue(onboarded_at)"
+                      @update:model-value="handleDateChange"
+                    />
+                  </PopoverContent>
+                </Popover>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -171,11 +203,25 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Icon } from '@iconify/vue'
-
-interface FormValues {
-  role: string
-  status: string
-}
+import type { Role } from '@/types/settingsTypes'
+import {
+  Calendar,
+  CalendarCell,
+  CalendarCellTrigger,
+  CalendarGrid,
+  CalendarGridBody,
+  CalendarGridHead,
+  CalendarGridRow,
+  CalendarHeadCell,
+  CalendarHeader,
+  CalendarHeading,
+  CalendarNextButton,
+  CalendarPrevButton,
+} from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { fetchRoles } from '@/api/settingsService'
+import { parseDate } from '@internationalized/date'
+import type { DateValue } from '@internationalized/date'
 
 const route = useRoute()
 const chatId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
@@ -183,31 +229,52 @@ const chatStore = useChatStore()
 const userStore = useUserStore()
 const isDialogOpen = ref(false)
 const messages = computed(() => chatStore.messages)
+const roles = ref<Role[]>([])
 
 const userProfile = computed(() => userStore.userProfile)
+
+interface FormValues {
+  role: string
+  status: string
+  onboarded_at: string | null
+}
 
 const formSchema = toTypedSchema(z.object({
   role: z.string().min(1, 'Роль обязательна'),
   status: z.enum(['init', 'active', 'blocked'], {
     errorMap: () => ({ message: 'Выберите статус' })
-  })
+  }),
+  onboarded_at: z.string().nullable()
 }))
 
 const form = useForm<FormValues>({
   validationSchema: formSchema,
   initialValues: {
     role: '',
-    status: ''
+    status: '',
+    onboarded_at: null
   }
 })
 
 const { value: role } = useField<string>('role')
 const { value: status } = useField<string>('status')
+const { value: onboarded_at } = useField<string | null>('onboarded_at')
+
+const handleDateChange = (date: DateValue | undefined) => {
+  onboarded_at.value = date ? new Date(date.toString()).toISOString() : null
+}
+
+const getDateValue = (dateString: string | null) => {
+  if (!dateString) return undefined
+  const date = new Date(dateString)
+  return parseDate(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`)
+}
 
 const editUser = () => {
   if (userProfile.value) {
     role.value = userProfile.value.role
     status.value = userProfile.value.status
+    onboarded_at.value = userProfile.value.onboarded_at
     isDialogOpen.value = true
   }
 }
@@ -219,9 +286,7 @@ const onSubmit = async () => {
       ...userProfile.value,
       role: role.value,
       status: status.value,
-      onboarded_at: status.value === 'active' && !userProfile.value.onboarded_at 
-        ? new Date().toISOString() 
-        : userProfile.value.onboarded_at
+      onboarded_at: onboarded_at.value || ''
     }
     await userStore.updateUserProfile(updatedUser)
     await userStore.setUserProfile(+chatId)
@@ -232,6 +297,7 @@ const onSubmit = async () => {
 onMounted(async () => {
   chatStore.setChat(+chatId)
   userStore.setUserProfile(+chatId)
+  roles.value = await fetchRoles()
 })
 </script>
 
