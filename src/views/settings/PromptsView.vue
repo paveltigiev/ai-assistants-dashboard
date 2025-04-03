@@ -223,12 +223,14 @@ const handleRowClick = (row: Prompt) => {
 
 const handleCreate = () => {
   selectedPrompt.value = null
-  role.value = ''
-  prompt.value = ''
+  role.value = ' '
+  prompt.value = ' '
   isDialogOpen.value = true
 }
 
 const onSubmit = async () => {
+  prompt.value = prompt.value.trim()
+  role.value = role.value.trim()
   const { valid } = await form.validate()
   if (valid) {
     if (selectedPrompt.value) {

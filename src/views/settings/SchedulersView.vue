@@ -200,10 +200,10 @@ const handleRowClick = (row: Scheduler) => {
 
 const handleCreate = () => {
   selectedScheduler.value = null
-  role.value = ''
+  role.value = roles.value.length > 0 ? roles.value[0].role : ''
   days_after.value = 0
   day_hour.value = 0
-  prompt.value = ''
+  prompt.value = ' '
   isDialogOpen.value = true
   workspace_id.value = 1
 }
@@ -217,6 +217,7 @@ const handleDelete = async (row: Scheduler) => {
 }
 
 const onSubmit = async () => {
+  prompt.value = prompt.value.trim()
   const { valid } = await form.validate()
   if (valid) {
     if (selectedScheduler.value) {
