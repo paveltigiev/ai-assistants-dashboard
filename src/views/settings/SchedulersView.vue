@@ -4,6 +4,7 @@
       <h1 class="text-2xl font-semibold">Рассылки</h1>
       <Button @click="handleCreate">Создать рассылку</Button>
     </div>
+
     <div class="rounded-md border">
       <Table>
         <TableHeader>

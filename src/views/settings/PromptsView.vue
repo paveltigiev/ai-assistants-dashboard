@@ -4,6 +4,7 @@
       <h1 class="text-2xl font-semibold">Промпты</h1>
       <Button @click="handleCreate">Создать промпт</Button>
     </div>
+
     <div class="rounded-md border">
       <Table>
         <TableHeader>
@@ -16,7 +17,37 @@
           <template v-if="prompts.length">
             <template v-for="row in prompts" :key="row.id">
               <TableRow class="cursor-pointer" @click="handleRowClick(row)">
-                <TableCell class="w-2/12">{{ row.role }}</TableCell>
+                <TableCell class="w-2/12">
+                  <TooltipProvider v-if="row.role === 'system'">
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <div class="flex items-center gap-1">
+                          <span class="text-blue-500">{{ row.role }}</span>
+                          <Info class="h-4 w-4 text-gray-500" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Системный промпт, подставляется во все вопросы ассистенту</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider v-else-if="row.role === 'master'">
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <div class="flex items-center gap-1">
+                          <span class="text-orange-500">{{ row.role }}</span>
+                          <Info class="h-4 w-4 text-gray-500" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Используется если промпт пользователя не найден</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <span v-else>{{ row.role }}</span>
+                </TableCell>
                 <TableCell class="w-10/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
@@ -39,6 +70,21 @@
             {{ selectedPrompt ? 'Редактирование существующего промпта' : 'Создание нового промпта' }}
           </DialogDescription>
         </DialogHeader>
+
+        <div class="mb-1 flex items-center gap-2 border rounded-lg px-2 py-2" v-if="selectedPrompt?.role === 'system'">
+          <Info class="h-4 w-4" />
+          <div class="text-xs">
+            Промпт с названием <strong class="text-blue-500">system</strong> используется как системный и подставляется во все вопросы ассистенту
+          </div>
+        </div>
+
+        <div class="mb-4 flex items-center gap-2 border rounded-lg px-2 py-2" v-if="selectedPrompt?.role === 'master'">
+          <Info class="h-4 w-4" />
+          <div class="text-xs">
+            Промпт с названием <strong class="text-orange-500">master</strong> используется если промпт пользователя не найден
+          </div>
+        </div>
+
         <form @submit.prevent="onSubmit" class="space-y-4">
           <FormField name="role">
             <FormItem>
@@ -92,6 +138,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Info } from 'lucide-vue-next'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -100,6 +147,12 @@ import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { createPrompt, updatePrompt } from '@/api/settingsService'
 import type { Prompt } from '@/types/settingsTypes'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface FormValues {
   role: string
@@ -109,7 +162,15 @@ interface FormValues {
 type CreatePrompt = Omit<Prompt, 'id'>
 
 const settingsStore = useSettingsStore();
-const prompts = computed(() => settingsStore.prompts)
+const prompts = computed(() => {
+  return [...settingsStore.prompts].sort((a, b) => {
+    if (a.role === 'system') return -1
+    if (b.role === 'system') return 1
+    if (a.role === 'master') return -1 
+    if (b.role === 'master') return 1
+    return 0
+  })
+})
 
 const formSchema = toTypedSchema(z.object({
   role: z.string().min(1, 'Название обязательно'),
