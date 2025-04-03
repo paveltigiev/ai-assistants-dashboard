@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from "vue"
+import { onMounted, computed } from "vue"
 import { useRouter } from 'vue-router'
 import { useUserStore } from "@/store/userStore"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'

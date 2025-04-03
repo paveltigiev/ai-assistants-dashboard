@@ -143,7 +143,6 @@ import { useForm, useField } from 'vee-validate'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { createScheduler, updateScheduler, deleteScheduler } from '@/api/settingsService'
-import { Icon } from '@iconify/vue'
 
 import type { Scheduler } from '@/types/settingsTypes'
 import type { Role } from '@/types/settingsTypes'
