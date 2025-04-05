@@ -144,6 +144,8 @@ import { useForm, useField } from 'vee-validate'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { createScheduler, updateScheduler, deleteScheduler } from '@/api/settingsService'
+import { useAuthStore } from '@/store/authStore'
+
 
 import type { Scheduler } from '@/types/settingsTypes'
 import type { Role } from '@/types/settingsTypes'
@@ -159,8 +161,12 @@ interface FormValues {
 type CreateScheduler = Omit<Scheduler, 'id'>
 
 const roles = ref<Role[]>([])
+
+const authStore = useAuthStore()
 const settingsStore = useSettingsStore();
 const schedulers = computed(() => settingsStore.schedulers)
+
+const profile = computed(() => authStore.profile)
 
 const formSchema = toTypedSchema(z.object({
   role: z.string().min(1, 'Роль обязательна'),
@@ -236,7 +242,7 @@ const onSubmit = async () => {
         days_after: days_after.value,
         day_hour: day_hour.value,
         prompt: prompt.value,
-        workspace_id: 1
+        workspace_id: profile.value.workspace_id
       }
       await createScheduler(newScheduler)
     }
@@ -248,6 +254,8 @@ const onSubmit = async () => {
 onMounted(async () => {
   settingsStore.setSchedulers()
   roles.value = await fetchRoles()
+
+  authStore.fetchProfile()
 })
 </script>
 

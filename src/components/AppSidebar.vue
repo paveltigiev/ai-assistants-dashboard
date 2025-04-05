@@ -23,17 +23,13 @@ import { Button } from '@/components/ui/button'
 import { useRoute } from 'vue-router'
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/store/authStore'
-import { supabase } from '@/lib/supabaseClient'
+
+const props = defineProps<SidebarProps>()
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
-const profile = ref({
-  id: '',
-  email: '',
-  role: '',
-  workspace_id: '',
-})
-const props = defineProps<SidebarProps>()
+const profile = computed(() => authStore.profile)
+
 const route = useRoute()
 const mode = useColorMode()
 
@@ -77,40 +73,30 @@ const data = ref({
 })
 
 onMounted(async () => {
-  await authStore.fetchUser()
+  await authStore.fetchProfile()
 
-  if (user.value) {
-    const { data: profileData, error } = await supabase
-    .from('profiles')
-    .select()
-    .eq("user_id", user.value.id)
-    .single()
-    
-    if (error) console.error('Error fetching profile:', error)
-    if (profileData) profile.value = profileData
+  data.value.user.email = user.value.email
+  data.value.user.name = profile.value.role == 'admin' ? 'Админ' : 'Менеджер'
 
-    data.value.user.email = user.value.email
-    data.value.user.name = profileData.role == 'admin' ? 'Админ' : 'Менеджер'
-
-    if (profileData.role == 'admin') {
-      data.value.navMain.push(
-        {
-          title: 'Управление',
-          url: '#',
-          items: [
-            {
-              title: 'Менеджеры',
-              url: '/managers',
-            },
-            {
-              title: 'Приглашения',
-              url: '/managers/invitations',
-            }
-          ]
-        }
-      )
-    }
+  if (profile.value.role == 'admin') {
+    data.value.navMain.push(
+      {
+        title: 'Управление',
+        url: '#',
+        items: [
+          {
+            title: 'Менеджеры',
+            url: '/managers',
+          },
+          {
+            title: 'Приглашения',
+            url: '/managers/invitations',
+          }
+        ]
+      }
+    )
   }
+
 })
 </script>
 

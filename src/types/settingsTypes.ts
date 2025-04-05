@@ -10,6 +10,7 @@ export type Prompt = {
   id: number
   role: string
   prompt: string
+  workspace_id: number
 }
 
 export type Scheduler = {

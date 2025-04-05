@@ -174,6 +174,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useAuthStore } from '@/store/authStore'
+
+const authStore = useAuthStore()
+const profile = computed(() => authStore.profile)
 
 interface FormValues {
   role: string
@@ -243,7 +247,8 @@ const onSubmit = async () => {
     } else {
       const newPrompt: CreatePrompt = {
         role: role.value,
-        prompt: prompt.value
+        prompt: prompt.value,
+        workspace_id: profile.value.workspace_id
       }
       await createPrompt(newPrompt)
     }
@@ -252,7 +257,10 @@ const onSubmit = async () => {
   }
 }
 
-onMounted(async () => settingsStore.setPrompts())
+onMounted(async () => {
+  settingsStore.setPrompts()
+  authStore.fetchProfile()
+})
 </script>
 
 <style>
