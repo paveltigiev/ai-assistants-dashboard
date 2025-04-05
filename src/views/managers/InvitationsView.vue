@@ -102,7 +102,7 @@ async function fetchInvitations() {
 }
 
 async function sendInvitation(email: string, workspace_id: string) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("invitations")
     .insert([{ email, workspace_id }]);
 

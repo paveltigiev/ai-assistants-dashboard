@@ -27,7 +27,7 @@ import {
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'vue-router'
 
-const props = defineProps<{
+defineProps<{
   user: {
     name: string
     email: string

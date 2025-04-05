@@ -241,7 +241,8 @@ const onSubmit = async () => {
       const updatedPrompt: Prompt = {
         id: selectedPrompt.value.id,
         role: role.value,
-        prompt: prompt.value
+        prompt: prompt.value,
+        workspace_id: profile.value.workspace_id
       }
       await updatePrompt(updatedPrompt)
     } else {
