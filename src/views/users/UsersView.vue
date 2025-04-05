@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-2xl font-semibold mb-4">Чаты</h1>
+    <h1 class="text-2xl font-semibold mb-4">Пользователи</h1>
     <div class="rounded-md border">
       <Table>
         <TableHeader>

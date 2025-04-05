@@ -34,6 +34,26 @@ const router = createRouter({
           component: () => import('@/views/users/UserView.vue')
         },
         {
+          path: '/workspaces',
+          name: 'Воркспейсы',
+          component: () => import('@/views/workspaces/WorkspacesView.vue')
+        },
+        {
+          path: '/managers',
+          name: 'Менеджеры',
+          component: () => import('@/views/managers/ManagersView.vue')
+        },
+        {
+          path: '/account',
+          name: 'Аккаунт',
+          component: () => import('@/views/account/AccountView.vue')
+        },
+        {
+          path: '/managers/invitations',
+          name: 'Приглашения',
+          component: () => import('@/views/managers/InvitationsView.vue')
+        },
+        {
           path: '/settings',
           name: 'Настройки',
           component: () => import('@/views/settings/SettingsView.vue'),
@@ -62,6 +82,16 @@ const router = createRouter({
           path: '/signin',
           name: 'signin',
           component: () => import('@/views/auth/SignIn.vue')
+        },
+        {
+          path: '/signInWithOtp',
+          name: 'signInWithOtp',
+          component: () => import('@/views/auth/SignInWithOtp.vue')
+        },
+        {
+          path: '/signup',
+          name: 'signup',
+          component: () => import('@/views/auth/SignUp.vue')
         },
         {
           path: '/terms',

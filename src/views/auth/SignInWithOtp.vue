@@ -16,21 +16,38 @@ import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 const email = ref('')
-const password = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
 async function handleSubmit() {
+
+  const { error: invitationError } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("email", email.value)
+    .eq("used", true)
+    .single()
+
+  if (invitationError) {
+    alert("Для входа вам нужно получить приглашение и зарегистрироваться");
+    throw new Error("Нет приглашения");
+  }
+
   try {
     loading.value = true
     error.value = null
     
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error: signInError } = await supabase.auth.signInWithOtp({
       email: email.value,
-      password: password.value
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`
+      }
     })
 
     if (signInError) throw signInError
+
+    router.push('/signin')
+    alert('Проверьте ваш email для входа в систему')
   } catch (e) {
     error.value = (e as Error).message
   } finally {
@@ -41,7 +58,8 @@ async function handleSubmit() {
 // Check if user is already authenticated
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session) {
-    const redirectPath = route.query.redirect as string || '/'
+    // Get the redirect path from query parameters or default to dashboard
+    const redirectPath = route.query.redirect as string || '/dashboard'
     router.push(redirectPath)
   }
 })
@@ -54,10 +72,10 @@ supabase.auth.onAuthStateChange((event, session) => {
         <Card>
           <CardHeader class="text-center">
             <CardTitle class="text-xl">
-              Вход в систему
+              Вход без пароля
             </CardTitle>
             <CardDescription>
-              <!-- Введите свою почту, чтобы получить ссылку для входа в систему -->
+              Введите свой email, чтобы получить ссылку для входа в систему
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -72,35 +90,19 @@ supabase.auth.onAuthStateChange((event, session) => {
                     placeholder="admin@mail.com"
                     required
                   />
-                  <div class="flex items-center">
-                    <Label html-for="password">Пароль</Label>
-                    <router-link
-                      to="/signInWithOtp"
-                      class="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Забыли пароль?
-                  </router-link>
-                  </div>
-                  <Input
-                    id="password"
-                    v-model="password"
-                    type="password"
-                    placeholder="********"
-                    required
-                  />
                   <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
                 </div>
                 <Button type="submit" class="w-full" :disabled="loading">
-                  {{ loading ? 'Отправка...' : 'Войти' }}
+                  {{ loading ? 'Отправка...' : 'Получить доступ' }}
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
         <div class="text-center text-sm">
-          Если у вас нет аккаунта, вы можете
-          <router-link to="/signup" class="underline underline-offset-4">
-            зарегистрироваться
+          Если вы вспомнили пароль, вы можете
+          <router-link to="/signin" class="underline underline-offset-4">
+            войти
           </router-link>
         </div>
       </div>

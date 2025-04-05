@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { ref } from 'vue'
 import {
   Card,
   CardContent,
@@ -7,9 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ref } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter, useRoute } from 'vue-router'
 
@@ -20,22 +20,49 @@ const password = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-async function handleSubmit() {
-  try {
-    loading.value = true
-    error.value = null
-    
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.value,
-      password: password.value
-    })
+async function registerUser(event: Event) {
+  event.preventDefault();
+  const emailValue = email.value;
+  const passwordValue = password.value;
+  const { data: invitation, error } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("email", email.value)
+    .eq("used", false)
+    .single()
 
-    if (signInError) throw signInError
-  } catch (e) {
-    error.value = (e as Error).message
-  } finally {
-    loading.value = false
+  if (error) {
+    alert("Для регистрации вам нужно получить приглашение.");
+    throw new Error("Нет приглашения");
   }
+
+  const { data: { user }, error: authError } = await supabase.auth.signUp({
+    email: emailValue,
+    password: passwordValue,
+  });
+
+  if (authError) throw authError;
+
+  if (!user) {
+    throw new Error("User registration failed");
+  }
+
+  await supabase.from("profiles").insert([
+    {
+      user_id: user.id,
+      workspace_id: invitation.workspace_id,
+      email: emailValue,
+      role: "user"
+    },
+  ]);
+
+  await supabase
+    .from("invitations")
+    .update({ used: true })
+    .eq("id", invitation.id);
+
+  alert('Регистрация прошла успешно! Проверьте почту для подтверждения.')
+  router.push('/signin')
 }
 
 // Check if user is already authenticated
@@ -54,33 +81,25 @@ supabase.auth.onAuthStateChange((event, session) => {
         <Card>
           <CardHeader class="text-center">
             <CardTitle class="text-xl">
-              Вход в систему
+              Регистрация в системе
             </CardTitle>
             <CardDescription>
-              <!-- Введите свою почту, чтобы получить ссылку для входа в систему -->
+              Введите свой email, на который вы получили приглашение
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form @submit.prevent="handleSubmit">
+            <form @submit.prevent="registerUser">
               <div class="grid gap-6">
                 <div class="grid gap-2">
                   <Label html-for="email">Email</Label>
                   <Input
-                    id="email"
-                    v-model="email"
-                    type="email"
-                    placeholder="admin@mail.com"
-                    required
+                  id="email"
+                  v-model="email"
+                  type="email"
+                  placeholder="admin@mail.com"
+                  required
                   />
-                  <div class="flex items-center">
-                    <Label html-for="password">Пароль</Label>
-                    <router-link
-                      to="/signInWithOtp"
-                      class="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Забыли пароль?
-                  </router-link>
-                  </div>
+                  <Label html-for="password">Пароль</Label>
                   <Input
                     id="password"
                     v-model="password"
@@ -91,16 +110,16 @@ supabase.auth.onAuthStateChange((event, session) => {
                   <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
                 </div>
                 <Button type="submit" class="w-full" :disabled="loading">
-                  {{ loading ? 'Отправка...' : 'Войти' }}
+                  {{ loading ? 'Отправка...' : 'Зарегистрироваться' }}
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
         <div class="text-center text-sm">
-          Если у вас нет аккаунта, вы можете
-          <router-link to="/signup" class="underline underline-offset-4">
-            зарегистрироваться
+          Если у вас есть аккаунт, вы можете
+          <router-link to="/signin" class="underline underline-offset-4">
+            войти
           </router-link>
         </div>
       </div>

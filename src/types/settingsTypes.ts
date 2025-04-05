@@ -20,3 +20,18 @@ export type Scheduler = {
   prompt: string
   workspace_id: number
 }
+
+export interface Profile {
+  id: number;
+  email: string;
+  workspace_id: string;
+  role: string;
+}
+
+export interface Invitation {
+  id: number;
+  email: string;
+  workspace_id: string;
+  created_at: string;
+  used: boolean;
+}

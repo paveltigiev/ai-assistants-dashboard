@@ -16,7 +16,7 @@ export const fetchRoles  = async (): Promise<Role[]> => {
   } catch (error) {
     console.log( (error as Error).message)
     return []
-    }
+  }
 }
 
 export const fetchPrompts  = async (): Promise<Prompt[]> => {
@@ -129,5 +129,20 @@ export const deleteScheduler = async (id: number) => {
   } catch (error) {
     console.log((error as Error).message)
     return false
+  }
+}
+
+export const fetchProfiles = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    console.log( (error as Error).message)
+    return []
   }
 }

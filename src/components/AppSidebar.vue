@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // import SearchForm from '@/components/SearchForm.vue'
 import VersionSwitcher from '@/components/VersionSwitcher.vue'
+import NavUser from '@/components/NavUser.vue'
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   type SidebarProps,
   SidebarRail,
 } from '@/components/ui/sidebar'
@@ -18,17 +20,30 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Icon } from '@iconify/vue'
 import { useColorMode } from '@vueuse/core'
 import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/store/authStore'
+import { supabase } from '@/lib/supabaseClient'
 
+const authStore = useAuthStore()
+const user = computed(() => authStore.user)
+const profile = ref({
+  id: '',
+  email: '',
+  role: '',
+  workspace_id: '',
+})
 const props = defineProps<SidebarProps>()
-const router = useRouter()
 const route = useRoute()
 const mode = useColorMode()
 
-const data = {
-  versions: ['@delikat_onboarding'],
+const data = ref({
+  versions: ['@delikat_market_info'],
+  user: {
+    name: 'Manager',
+    email: 'manager@mail.com',
+    avatar: '/avatars/shadcn.jpg',
+  },
   navMain: [
     {
       title: 'Пользователи и чаты',
@@ -59,12 +74,44 @@ const data = {
       ],
     }
   ],
-}
+})
 
-const handleLogout = () => {
-  supabase.auth.signOut()
-  router.push('/signin')
-}
+onMounted(async () => {
+  await authStore.fetchUser()
+
+  if (user.value) {
+    const { data: profileData, error } = await supabase
+    .from('profiles')
+    .select()
+    .eq("user_id", user.value.id)
+    .single()
+    
+    if (error) console.error('Error fetching profile:', error)
+    if (profileData) profile.value = profileData
+
+    data.value.user.email = user.value.email
+    data.value.user.name = profileData.role == 'admin' ? 'Админ' : 'Менеджер'
+
+    if (profileData.role == 'admin') {
+      data.value.navMain.push(
+        {
+          title: 'Управление',
+          url: '#',
+          items: [
+            {
+              title: 'Менеджеры',
+              url: '/managers',
+            },
+            {
+              title: 'Приглашения',
+              url: '/managers/invitations',
+            }
+          ]
+        }
+      )
+    }
+  }
+})
 </script>
 
 <template>
@@ -91,32 +138,34 @@ const handleLogout = () => {
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
-    <SidebarRail />
-
-    <div class="relative flex w-full min-w-0 flex-col p-2">
-      <div class="flex items-center justify-between">
-        <Button variant="outline" @click="handleLogout">Выйти</Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button variant="outline">
-              <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span class="sr-only">Toggle theme</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem @click="mode = 'light'">
-              Light
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="mode = 'dark'">
-              Dark
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="mode = 'auto'">
-              System
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <SidebarFooter class="p-2">
+      <div class="relative flex w-full min-w-0 flex-col ">
+        <div class="flex items-center justify-between">
+          <DropdownMenu v-if="false">
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline">
+                <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span class="sr-only">Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="mode = 'light'">
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="mode = 'dark'">
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="mode = 'auto'">
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+
+      <NavUser :user="data.user" />
+    </SidebarFooter>
+    <SidebarRail />
   </Sidebar>
 </template>
