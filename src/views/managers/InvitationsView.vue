@@ -12,6 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { formatDate } from "@/utils/date"
 import type { Invitation } from '@/types/settingsTypes';
 import { useSettingsStore } from "@/store/settingsStore"
@@ -66,6 +73,8 @@ onMounted(async() => {
   fetchInvitations();
   await authStore.fetchProfile()
   isAdmin.value = profile.value.role == 'admin'
+  settingsStore.setWorkspaces()
+  workspace_id.value = profile.value.workspace_id
 })
 </script>
 
@@ -107,34 +116,47 @@ onMounted(async() => {
         </Table>
       </div>
       
-      <Card class="w-1/3">
-        <CardHeader class="">
-          <CardTitle class="text-xl">
-            Новое приглашение
-          </CardTitle>
-          <CardDescription>
-            Введите email и workspace ID, чтобы отправить приглашение
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form @submit.prevent="handleSubmit">
-            <div class="grid gap-6">
-              <div class="grid gap-2">
-            <Label for="email">Email</Label>
-            <Input id="email" v-model="email" type="email" placeholder="Enter email" required />
+      <div class="w-1/3">
+        <Card>
+          <CardHeader class="">
+            <CardTitle class="text-xl">
+              Новое приглашение
+            </CardTitle>
+            <CardDescription>
+              Введите email и workspace ID, чтобы отправить приглашение
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form @submit.prevent="handleSubmit">
+              <div class="grid gap-6">
+                <div class="grid gap-2">
+                  <Label for="email">Email</Label>
+                  <Input id="email" v-model="email" type="email" placeholder="Введите email" required />
 
-            <Label for="workspace_id">Workspace ID</Label>
-            <Input id="workspace_id" v-model="workspace_id" type="text" placeholder="Enter workspace ID" required />
+                  <div v-if="isAdmin">
+                    <Select v-model="workspace_id">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите workspace" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem v-for="workspace in workspaces" :key="workspace.id" :value="workspace.id">
+                          {{ workspace.name }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+
                 </div>
-            <Button type="submit" class="w-full">Отправить</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                <Button type="submit" class="w-full">Отправить</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-
 </style>
