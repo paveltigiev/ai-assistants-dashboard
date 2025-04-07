@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { Role, Prompt, Scheduler } from '@/types/settingsTypes'
+import type { Role, Prompt, Scheduler, Profile } from '@/types/settingsTypes'
 
 type CreatePrompt = Omit<Prompt, 'id'>
 type CreateScheduler = Omit<Scheduler, 'id'>
@@ -136,6 +136,34 @@ export const fetchProfiles = async () => {
   try {
     const { data, error } = await supabase
       .from("profiles")
+      .select("*")
+
+    if (error) throw error
+
+    return data
+  } catch (error) {
+    console.log( (error as Error).message)
+    return []
+  }
+}
+
+export async function updateProfile(profile: Profile) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      role: profile.role,
+      workspace_id: profile.workspace_id,
+    })
+    .eq('id', profile.id)
+
+  if (error) throw error
+  return data
+}
+
+export const fetchWorkspaces = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
       .select("*")
 
     if (error) throw error

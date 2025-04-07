@@ -36,3 +36,10 @@ export interface Invitation {
   created_at: string;
   used: boolean;
 }
+
+export interface Profile {
+  id: number;
+  email: string;
+  workspace_id: string;
+  role: string;
+}

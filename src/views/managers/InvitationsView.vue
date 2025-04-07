@@ -1,73 +1,5 @@
-<template>
-  <div>
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-semibold">Приглашения</h1>
-    </div>
-
-    <div class="flex gap-4">
-
-      
-      <div class="rounded-md border w-2/3">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Workspace</TableHead>
-              <TableHead>Дата</TableHead>
-              <TableHead>Использован</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <template v-if="invitations.length">
-              <template v-for="row in invitations" :key="row.id">
-                <TableRow>
-                  <TableCell class="w-1/12">{{ row.email }}</TableCell>
-                  <TableCell class="w-1/12">{{ row.workspace_id }}</TableCell>
-                  <TableCell class="w-1/12">{{ row.created_at }}</TableCell>
-                  <TableCell class="w-1/12">{{ row.used }}</TableCell>
-                </TableRow>
-              </template>
-            </template>
-            
-            <TableRow v-else>
-              <TableCell colspan="4" class="h-24 text-center">
-                Загрузка профилей...
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-      
-      <Card class="w-1/3">
-        <CardHeader class="">
-          <CardTitle class="text-xl">
-            Новое приглашение
-          </CardTitle>
-          <CardDescription>
-            Введите email и workspace ID, чтобы отправить приглашение
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form @submit.prevent="handleSubmit">
-            <div class="grid gap-6">
-              <div class="grid gap-2">
-            <Label for="email">Email</Label>
-            <Input id="email" v-model="email" type="email" placeholder="Enter email" required />
-
-            <Label for="workspace_id">Workspace ID</Label>
-            <Input id="workspace_id" v-model="workspace_id" type="text" placeholder="Enter workspace ID" required />
-                </div>
-            <Button type="submit" class="w-full">Отправить</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabaseClient';
@@ -80,12 +12,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-
+import { formatDate } from "@/utils/date"
 import type { Invitation } from '@/types/settingsTypes';
+import { useSettingsStore } from "@/store/settingsStore"
+import { useAuthStore } from '@/store/authStore'
+const authStore = useAuthStore()
 
+const settingsStore = useSettingsStore()
+const profile = computed(() => authStore.profile)
+const isAdmin = ref(false)
 const email = ref('');
 const workspace_id = ref('');
-
+const workspaces = computed(() => settingsStore.workspaces)
 const invitations = ref<Invitation[]>([]);
 
 async function fetchInvitations() {
@@ -124,10 +62,78 @@ function handleSubmit() {
     });
 }
 
-onMounted(() => {
-  fetchInvitations(); // Fetch invitations when the component is mounted
-});
+onMounted(async() => {
+  fetchInvitations();
+  await authStore.fetchProfile()
+  isAdmin.value = profile.value.role == 'admin'
+})
 </script>
+
+<template>
+  <div>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-semibold">Приглашения</h1>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="rounded-md border w-2/3">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead v-if="isAdmin">Workspace</TableHead>
+              <TableHead>Дата</TableHead>
+              <TableHead>Использован</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <template v-if="invitations.length">
+              <template v-for="row in invitations" :key="row.id">
+                <TableRow>
+                  <TableCell>{{ row.email }}</TableCell>
+                  <TableCell v-if="isAdmin">{{ workspaces.find(w => w.id === row.workspace_id)?.name || row.workspace_id }}</TableCell>
+                  <TableCell>{{ formatDate(row.created_at) }}</TableCell>
+                  <TableCell>{{ row.used? 'Да' : 'Нет' }}</TableCell>
+                </TableRow>
+              </template>
+            </template>
+
+            <TableRow v-else>
+              <TableCell colspan="4" class="h-24 text-center">
+                Загрузка профилей...
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+      
+      <Card class="w-1/3">
+        <CardHeader class="">
+          <CardTitle class="text-xl">
+            Новое приглашение
+          </CardTitle>
+          <CardDescription>
+            Введите email и workspace ID, чтобы отправить приглашение
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form @submit.prevent="handleSubmit">
+            <div class="grid gap-6">
+              <div class="grid gap-2">
+            <Label for="email">Email</Label>
+            <Input id="email" v-model="email" type="email" placeholder="Enter email" required />
+
+            <Label for="workspace_id">Workspace ID</Label>
+            <Input id="workspace_id" v-model="workspace_id" type="text" placeholder="Enter workspace ID" required />
+                </div>
+            <Button type="submit" class="w-full">Отправить</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</template>
 
 <style lang="scss" scoped>
 

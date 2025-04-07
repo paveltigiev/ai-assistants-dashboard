@@ -29,6 +29,7 @@ const props = defineProps<SidebarProps>()
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 const profile = computed(() => authStore.profile)
+const isAdmin = ref(false)
 
 const route = useRoute()
 const mode = useColorMode()
@@ -36,7 +37,7 @@ const mode = useColorMode()
 const data = ref({
   versions: ['@delikat_market_info'],
   user: {
-    name: 'Manager',
+    name: 'Менеджер',
     email: 'manager@mail.com',
     avatar: '/avatars/shadcn.jpg',
   },
@@ -68,19 +69,8 @@ const data = ref({
           url: '/settings/schedulers',
         }
       ],
-    }
-  ],
-})
-
-onMounted(async () => {
-  await authStore.fetchProfile()
-
-  data.value.user.email = user.value.email
-  data.value.user.name = profile.value.role == 'admin' ? 'Админ' : 'Менеджер'
-
-  if (profile.value.role == 'admin') {
-    data.value.navMain.push(
-      {
+    },
+    {
         title: 'Управление',
         url: '#',
         items: [
@@ -94,9 +84,15 @@ onMounted(async () => {
           }
         ]
       }
-    )
-  }
+  ]
+})
 
+onMounted(async () => {
+  await authStore.fetchProfile()
+
+  data.value.user.email = user.value.email
+  isAdmin.value = profile.value.role == 'admin'
+  data.value.user.name = isAdmin.value ? 'Админ' : 'Менеджер'
 })
 </script>
 

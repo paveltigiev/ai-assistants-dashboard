@@ -9,17 +9,17 @@
         <TableHeader>
           <TableRow>
             <TableHead>Email</TableHead>
-            <TableHead>Workspace</TableHead>
-            <TableHead>Роль</TableHead>
+            <TableHead v-if="isAdmin">Workspace</TableHead>
+            <TableHead v-if="isAdmin">Роль</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <template v-if="profiles.length">
-            <template v-for="row in profiles" :key="row.id">
-              <TableRow class="cursor-pointer">
-                <TableCell class="w-1/12">{{ row.email }}</TableCell>
-                <TableCell class="w-1/12">{{ row.workspace_id }}</TableCell>
-                <TableCell class="w-1/12">{{ row.role }}</TableCell>
+            <template v-for="row in profiles" :key="row.id" >
+              <TableRow @click="editManager(row)" :class="[isAdmin ? 'cursor-pointer' : '']">
+                <TableCell>{{ row.email }}</TableCell>
+                <TableCell v-if="isAdmin">{{ workspaces.find(w => w.id === row.workspace_id)?.name || row.workspace_id }}</TableCell>
+                <TableCell v-if="isAdmin">{{ row.role }}</TableCell>
               </TableRow>
             </template>
           </template>
@@ -32,22 +32,103 @@
         </TableBody>
       </Table>
     </div>
+
+    <!-- Модалка редактирования -->
+    <Dialog v-model:open="showModal">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Редактировать менеджера</DialogTitle>
+        </DialogHeader>
+        <div class="space-y-4">
+          <div>
+            <Label class="text-sm font-medium">Email</Label>
+            <Input type="email" v-model="selectedManager.email" class="input" disabled />
+          </div>
+          <div>
+            <Label class="text-sm font-medium">Workspace ID</Label>
+            <Select v-model="selectedManager.workspace_id">
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите workspace" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="workspace in workspaces" :key="workspace.id" :value="workspace.id">
+                  {{ workspace.name }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Роль</label>
+            <Select v-model="selectedManager.role">
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите роль" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="role in roles" :key="role" :value="role">
+                  {{ role }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="flex justify-end gap-2">
+            <Button @click="showModal = false" class="btn">Отмена</Button>
+            <Button @click="saveManager" class="btn-primary">Сохранить</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
-// import { useSettingsStore } from "@/store/settingsStore"
-import { fetchProfiles } from '@/api/settingsService'
+import { onMounted, ref, computed } from "vue"
+import { fetchProfiles, updateProfile } from '@/api/settingsService'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from "@/components/ui/label"
 import type { Profile } from '@/types/settingsTypes'
 
-// const settingsStore = useSettingsStore();
+import { useSettingsStore } from "@/store/settingsStore"
+const settingsStore = useSettingsStore()
 
+const authStore = useAuthStore()
+const profile = computed(() => authStore.profile)
+const workspaces = computed(() => settingsStore.workspaces)
+const isAdmin = ref(false)
 const profiles = ref<Profile[]>([])
+const roles = ref(['admin', 'user'])
+
+const showModal = ref(false)
+const selectedManager = ref<Partial<Profile>>({})
+
+function editManager(row: Profile) {
+  selectedManager.value = { ...row }
+  showModal.value = true
+}
+
+async function saveManager() {
+  if (!selectedManager.value.id) return
+  await updateProfile(selectedManager.value as Profile)
+  showModal.value = false
+  profiles.value = await fetchProfiles()
+}
 
 onMounted(async () => {
   profiles.value = await fetchProfiles()
+  await authStore.fetchProfile()
+  isAdmin.value = profile.value.role === 'admin'
+
+  settingsStore.setWorkspaces()
 })
 </script>
 
