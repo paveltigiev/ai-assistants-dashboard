@@ -10,8 +10,9 @@
         <TableHeader>
           <TableRow>
             <TableHead>Роль</TableHead>
-            <TableHead>Дней после</TableHead>
+            <TableHead>День</TableHead>
             <TableHead>Время</TableHead>
+            <TableHead>Изображение</TableHead>
             <TableHead>Промпт</TableHead>
           </TableRow>
         </TableHeader>
@@ -21,14 +22,18 @@
               <TableRow class="cursor-pointer" @click="handleRowClick(row)">
                 <TableCell class="w-1/12">{{ row.role }}</TableCell>
                 <TableCell class="w-1/12">{{ row.days_after }}</TableCell>
-                <TableCell class="w-1/12">{{ row.day_hour }}</TableCell>
+                <TableCell class="w-1/12">{{ row.time }}</TableCell>
+                <TableCell class="w-1/12">
+                  <img v-if="row.image_url" :src="row.image_url" class="w-16 h-16 object-cover rounded" />
+                  <span v-else>-</span>
+                </TableCell>
                 <TableCell class="w-8/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
           </template>
 
           <TableRow v-else>
-            <TableCell colspan="4" class="h-24 text-center">
+            <TableCell colspan="5" class="h-24 text-center">
               Загрузка рассылок...
             </TableCell>
           </TableRow>
@@ -72,11 +77,33 @@
               <FormMessage />
             </FormItem>
           </FormField>
-          <FormField name="day_hour">
+          <FormField name="time">
             <FormItem>
               <FormLabel>Время</FormLabel>
               <FormControl>
-                <Input v-model.number="day_hour" placeholder="Введите время" />
+                <Input
+                  v-model="time"
+                  placeholder="ЧЧ:ММ"
+                  maxlength="5"
+                  @input="handleTimeInput"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+          <FormField name="image">
+            <FormItem>
+              <FormLabel>Изображение</FormLabel>
+              <FormControl>
+                <div class="flex flex-col gap-2">
+                  <img v-if="imagePreview" :src="imagePreview" class="w-32 h-32 object-cover rounded" />
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    @change="handleImageUpload"
+                    class="cursor-pointer"
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -145,7 +172,8 @@ import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { createScheduler, updateScheduler, deleteScheduler } from '@/api/settingsService'
 import { useAuthStore } from '@/store/authStore'
-
+import { supabase } from '@/lib/supabaseClient'
+import { formatTimeInput } from '@/utils/timeFormat'
 
 import type { Scheduler } from '@/types/settingsTypes'
 import type { Role } from '@/types/settingsTypes'
@@ -153,14 +181,17 @@ import type { Role } from '@/types/settingsTypes'
 interface FormValues {
   role: string
   days_after: number
-  day_hour: number
+  time: string
   prompt: string
   workspace_id: number
+  image_url?: string
 }
 
 type CreateScheduler = Omit<Scheduler, 'id'>
 
 const roles = ref<Role[]>([])
+const imagePreview = ref<string | null>(null)
+const selectedFile = ref<File | null>(null)
 
 const authStore = useAuthStore()
 const settingsStore = useSettingsStore();
@@ -171,7 +202,7 @@ const profile = computed(() => authStore.profile)
 const formSchema = toTypedSchema(z.object({
   role: z.string().min(1, 'Роль обязательна'),
   days_after: z.number().min(0, 'Количество дней обязательно'),
-  day_hour: z.number().min(0, 'Время обязательно'),
+  time: z.string().min(0, 'Время обязательно'),
   prompt: z.string().min(1, 'Промпт обязателен'),
 }))
 
@@ -180,27 +211,62 @@ const form = useForm<FormValues>({
   initialValues: {
     role: '',
     days_after: 0,
-    day_hour: 0,
+    time: '09:00',
     prompt: '',
-    workspace_id: 1
+    workspace_id: 0
   }
 })
 
 const { value: role } = useField<string>('role')
 const { value: days_after } = useField<number>('days_after')
-const { value: day_hour } = useField<number>('day_hour')
+const { value: time } = useField<string>('time')
 const { value: prompt } = useField<string>('prompt')
 const { value: workspace_id } = useField<number>('workspace_id')
+const { value: image_url } = useField<string | undefined>('image_url')
+
 const selectedScheduler = ref<Scheduler | null>(null)
 const isDialogOpen = ref(false)
+
+const handleImageUpload = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    selectedFile.value = input.files[0]
+    imagePreview.value = URL.createObjectURL(input.files[0])
+  }
+}
+
+const uploadImage = async (file: File): Promise<string | null> => {
+  try {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Math.random()}.${fileExt}`
+    const filePath = fileName
+
+    const { error: uploadError } = await supabase.storage
+      .from('scheduler-images')
+      .upload(filePath, file)
+
+    if (uploadError) throw uploadError
+
+    const { data } = supabase.storage
+      .from('scheduler-images')
+      .getPublicUrl(filePath)
+
+    return data.publicUrl
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    return null
+  }
+}
 
 const handleRowClick = (row: Scheduler) => {
   selectedScheduler.value = row
   role.value = row.role
   days_after.value = row.days_after
-  day_hour.value = row.day_hour
+  time.value = row.time
   prompt.value = row.prompt
   workspace_id.value = row.workspace_id
+  image_url.value = row.image_url
+  imagePreview.value = row.image_url || null
   isDialogOpen.value = true
 }
 
@@ -208,10 +274,13 @@ const handleCreate = () => {
   selectedScheduler.value = null
   role.value = roles.value.length > 0 ? roles.value[0].role : ''
   days_after.value = 0
-  day_hour.value = 0
+  time.value = '09:00'
   prompt.value = ' '
+  image_url.value = undefined
+  imagePreview.value = null
+  selectedFile.value = null
   isDialogOpen.value = true
-  workspace_id.value = 1
+  workspace_id.value = profile.value.workspace_id
 }
 
 const handleDelete = async (row: Scheduler) => {
@@ -222,27 +291,44 @@ const handleDelete = async (row: Scheduler) => {
   }
 }
 
+const handleTimeInput = (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const formattedValue = formatTimeInput(input.value)
+  time.value = formattedValue
+}
+
 const onSubmit = async () => {
   prompt.value = prompt.value.trim()
   const { valid } = await form.validate()
   if (valid) {
+    let imageUrl = image_url.value
+
+    if (selectedFile.value) {
+      const uploadedUrl = await uploadImage(selectedFile.value)
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl
+      }
+    }
+
     if (selectedScheduler.value) {
       const updatedScheduler: Scheduler = {
         id: selectedScheduler.value.id,
         role: role.value,
         days_after: days_after.value,
-        day_hour: day_hour.value,
+        time: time.value,
         prompt: prompt.value,
-        workspace_id: workspace_id.value
+        workspace_id: workspace_id.value,
+        image_url: imageUrl
       }
       await updateScheduler(updatedScheduler)
     } else {
       const newScheduler: CreateScheduler = {
         role: role.value,
         days_after: days_after.value,
-        day_hour: day_hour.value,
+        time: time.value,
         prompt: prompt.value,
-        workspace_id: profile.value.workspace_id
+        workspace_id: profile.value.workspace_id,
+        image_url: imageUrl
       }
       await createScheduler(newScheduler)
     }
@@ -252,10 +338,13 @@ const onSubmit = async () => {
 }
 
 onMounted(async () => {
+  await authStore.fetchProfile()
   settingsStore.setSchedulers()
   roles.value = await fetchRoles()
-
-  authStore.fetchProfile()
+  
+  if (profile.value) {
+    workspace_id.value = profile.value.workspace_id
+  }
 })
 </script>
 

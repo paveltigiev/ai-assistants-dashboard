@@ -17,9 +17,10 @@ export type Scheduler = {
   id: number
   role: string
   days_after: number
-  day_hour: number
+  time: string
   prompt: string
   workspace_id: number
+  image_url?: string
 }
 
 export interface Profile {

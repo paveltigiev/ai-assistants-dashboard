@@ -145,8 +145,6 @@ onMounted(async() => {
                       </SelectContent>
                     </Select>
                   </div>
-
-
                 </div>
                 <Button type="submit" class="w-full">Отправить</Button>
               </div>
