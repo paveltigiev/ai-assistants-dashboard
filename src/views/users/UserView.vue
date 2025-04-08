@@ -14,6 +14,9 @@
                   <div class="message__header-username">{{ message.username }}</div>
                   <div class="message__header-time">{{ formatDate(message.created_at, 'HH:mm DD.MM.YYYY') }}</div>
                 </div>
+                <div class="message__image" v-if="message.image_url">
+                  <img :src="message.image_url" alt="Image" class="w-full h-full object-cover rounded-md">
+                </div>
                 <div class="message__content">{{ message.text }}</div>
               </div>
             </div>

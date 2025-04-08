@@ -19,4 +19,5 @@ export interface Message {
   role: string
   username: string
   text: string
+  image_url: string
 }
