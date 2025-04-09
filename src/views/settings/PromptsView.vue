@@ -11,6 +11,7 @@
           <TableRow>
             <TableHead>Название</TableHead>
             <TableHead>Промпт</TableHead>
+            <TableHead>Workspace</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,7 +63,8 @@
 
                   <span v-else>{{ row.role }}</span>
                 </TableCell>
-                <TableCell class="w-10/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
+                <TableCell class="w-9/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
+                <TableCell class="w-1/12">{{ workspaces.find(w => w.id === row.workspace_id)?.name || row.workspace_id }}</TableCell>
               </TableRow>
             </template>
           </template>
@@ -112,6 +114,24 @@
               <FormLabel>Название</FormLabel>
               <FormControl>
                 <Input v-model="role" placeholder="Введите название" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+          <FormField name="workspace_id" v-if="isAdmin">
+            <FormItem>
+              <FormLabel>Workspace</FormLabel>
+              <FormControl>
+                <Select v-model="workspace_id">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите workspace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="workspace in workspaces" :key="workspace.id" :value="workspace.id">
+                      {{ workspace.name }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -175,6 +195,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const authStore = useAuthStore()
 const profile = computed(() => authStore.profile)
@@ -182,6 +209,7 @@ const profile = computed(() => authStore.profile)
 interface FormValues {
   role: string
   prompt: string
+  workspace_id?: number
 }
 
 type CreatePrompt = Omit<Prompt, 'id'>
@@ -214,14 +242,19 @@ const form = useForm<FormValues>({
 
 const { value: role } = useField<string>('role')
 const { value: prompt } = useField<string>('prompt')
+const { value: workspace_id } = useField<number>('workspace_id')
 
 const selectedPrompt = ref<Prompt | null>(null)
 const isDialogOpen = ref(false)
+
+const isAdmin = computed(() => profile.value?.role === 'admin')
+const workspaces = computed(() => settingsStore.workspaces)
 
 const handleRowClick = (row: Prompt) => {
   selectedPrompt.value = row
   role.value = row.role
   prompt.value = row.prompt
+  workspace_id.value = row.workspace_id
   isDialogOpen.value = true
 }
 
@@ -229,6 +262,7 @@ const handleCreate = () => {
   selectedPrompt.value = null
   role.value = ' '
   prompt.value = ' '
+  workspace_id.value = isAdmin.value ? undefined : profile.value.workspace_id
   isDialogOpen.value = true
 }
 
@@ -242,14 +276,14 @@ const onSubmit = async () => {
         id: selectedPrompt.value.id,
         role: role.value,
         prompt: prompt.value,
-        workspace_id: profile.value.workspace_id
+        workspace_id: workspace_id.value || profile.value.workspace_id
       }
       await updatePrompt(updatedPrompt)
     } else {
       const newPrompt: CreatePrompt = {
         role: role.value,
         prompt: prompt.value,
-        workspace_id: profile.value.workspace_id
+        workspace_id: workspace_id.value || profile.value.workspace_id
       }
       await createPrompt(newPrompt)
     }
@@ -260,7 +294,10 @@ const onSubmit = async () => {
 
 onMounted(async () => {
   settingsStore.setPrompts()
-  authStore.fetchProfile()
+  await authStore.fetchProfile()
+  if (isAdmin.value) {
+    await settingsStore.setWorkspaces()
+  }
 })
 </script>
 
