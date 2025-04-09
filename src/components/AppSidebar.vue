@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // import SearchForm from '@/components/SearchForm.vue'
-import VersionSwitcher from '@/components/VersionSwitcher.vue'
+import WorkspaceSwitcher from './WorkspaceSwitcher.vue'
 import NavUser from '@/components/NavUser.vue'
 import {
   Sidebar,
@@ -23,19 +23,22 @@ import { Button } from '@/components/ui/button'
 import { useRoute } from 'vue-router'
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/store/authStore'
+import { useSettingsStore } from '@/store/settingsStore'
 
 const props = defineProps<SidebarProps>()
 
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const user = computed(() => authStore.user)
 const profile = computed(() => authStore.profile)
 const isAdmin = ref(false)
+const workspaces = computed(() => settingsStore.workspaces)
 
 const route = useRoute()
 const mode = useColorMode()
 
 const data = ref({
-  versions: ['@delikat_market_info'],
+  workspace: workspaces.value,
   user: {
     name: 'Менеджер',
     email: 'manager@mail.com',
@@ -89,12 +92,22 @@ const data = ref({
 
 onMounted(async () => {
   await authStore.fetchProfile()
+  if (profile.value.role === 'admin') {
+    await settingsStore.setWorkspaces()
+  }
 
   data.value.user.email = user.value.email
-  isAdmin.value = profile.value.role == 'admin'
+  isAdmin.value = profile.value.role === 'admin'
   data.value.user.name = isAdmin.value ? 'Админ' : 'Менеджер'
+  data.value.workspace = workspaces.value
 
-  if (profile.value.role == 'admin') {
+  // Set default workspace from user's profile
+  const defaultWorkspace = workspaces.value.find(w => w.id === profile.value.workspace_id)
+  if (defaultWorkspace) {
+    settingsStore.currentWorkspace = defaultWorkspace
+  }
+
+  if (profile.value.role === 'admin') {
     data.value.navMain[1].items.push({
       title: 'Воркспейсы',
       url: '/settings/workspaces',
@@ -106,9 +119,9 @@ onMounted(async () => {
 <template>
   <Sidebar v-bind="props">
     <SidebarHeader>
-      <VersionSwitcher
-        :versions="data.versions"
-        :default-version="data.versions[0]"
+      <WorkspaceSwitcher
+        :workspaces="data.workspace"
+        :default-workspace="settingsStore.currentWorkspace"
       />
       <!-- <SearchForm /> -->
     </SidebarHeader>

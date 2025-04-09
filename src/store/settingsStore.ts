@@ -9,6 +9,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const prompts = ref<Prompt[]>([])
   const schedulers = ref<Scheduler[]>([])
   const workspaces = ref<any[]>([])
+  const currentWorkspace = ref<any>(null)
 
   const setRoles = async() => {
     roles.value = await fetchRoles()
@@ -27,6 +28,14 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   return {
-    roles, prompts, schedulers, setRoles, setPrompts, setSchedulers, setWorkspaces, workspaces
+    roles,
+    prompts,
+    schedulers,
+    workspaces,
+    currentWorkspace,
+    setRoles,
+    setPrompts,
+    setSchedulers,
+    setWorkspaces
   }
 })
