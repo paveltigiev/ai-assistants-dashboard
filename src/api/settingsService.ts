@@ -19,17 +19,22 @@ export const fetchRoles  = async (): Promise<Role[]> => {
   }
 }
 
-export const fetchPrompts  = async (): Promise<Prompt[]> => {
+export const fetchPrompts = async (workspaceId?: number): Promise<Prompt[]> => {
   try {
+    if (!workspaceId) {
+      return []
+    }
+
     const { data, error } = await supabase
       .from("prompts")
       .select("*")
+      .eq("workspace_id", workspaceId)
 
     if (error) throw error
 
     return data
   } catch (error) {
-    console.log( (error as Error).message)
+    console.log((error as Error).message)
     return []
   }
 }

@@ -16,7 +16,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   const setPrompts = async() => {
-    prompts.value = await fetchPrompts()
+    prompts.value = await fetchPrompts(currentWorkspace.value?.id)
   }
 
   const setSchedulers = async() => {

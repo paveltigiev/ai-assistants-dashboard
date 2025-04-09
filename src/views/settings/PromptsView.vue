@@ -11,7 +11,6 @@
           <TableRow>
             <TableHead>Название</TableHead>
             <TableHead>Промпт</TableHead>
-            <TableHead>Workspace</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,8 +62,7 @@
 
                   <span v-else>{{ row.role }}</span>
                 </TableCell>
-                <TableCell class="w-9/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
-                <TableCell class="w-1/12">{{ workspaces.find(w => w.id === row.workspace_id)?.name || row.workspace_id }}</TableCell>
+                <TableCell class="w-10/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
           </template>
@@ -162,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from "vue"
+import { onMounted, computed, ref, watch } from "vue"
 import { useSettingsStore } from "@/store/settingsStore"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
@@ -215,16 +213,11 @@ interface FormValues {
 type CreatePrompt = Omit<Prompt, 'id'>
 
 const settingsStore = useSettingsStore();
-const prompts = computed(() => {
-  return [...settingsStore.prompts].sort((a, b) => {
-    if (a.role === 'system') return -1
-    if (b.role === 'system') return 1
-    if (a.role === 'scheduler') return -1 
-    if (b.role === 'scheduler') return 1
-    if (a.role === 'master') return -1 
-    if (b.role === 'master') return 1
-    return 0
-  })
+const prompts = computed(() => settingsStore.prompts)
+
+// Watch for workspace changes
+watch(() => settingsStore.currentWorkspace, async () => {
+  await settingsStore.setPrompts()
 })
 
 const formSchema = toTypedSchema(z.object({
