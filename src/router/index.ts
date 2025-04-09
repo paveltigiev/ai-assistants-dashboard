@@ -34,9 +34,9 @@ const router = createRouter({
           component: () => import('@/views/users/UserView.vue')
         },
         {
-          path: '/workspaces',
+          path: '/settings/workspaces',
           name: 'Воркспейсы',
-          component: () => import('@/views/workspaces/WorkspacesView.vue')
+          component: () => import('@/views/settings/WorkspacesView.vue')
         },
         {
           path: '/managers',

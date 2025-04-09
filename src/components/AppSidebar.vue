@@ -93,6 +93,13 @@ onMounted(async () => {
   data.value.user.email = user.value.email
   isAdmin.value = profile.value.role == 'admin'
   data.value.user.name = isAdmin.value ? 'Админ' : 'Менеджер'
+
+  if (profile.value.role == 'admin') {
+    data.value.navMain[1].items.push({
+      title: 'Воркспейсы',
+      url: '/settings/workspaces',
+    })
+  }
 })
 </script>
 
