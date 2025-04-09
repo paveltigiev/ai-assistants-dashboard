@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue"
+import { onMounted, ref, computed, watch } from "vue"
 import { fetchProfiles, updateProfile } from '@/api/settingsService'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -105,7 +105,7 @@ const authStore = useAuthStore()
 const profile = computed(() => authStore.profile)
 const workspaces = computed(() => settingsStore.workspaces)
 const isAdmin = ref(false)
-const profiles = ref<Profile[]>([])
+const profiles = computed(() => settingsStore.profiles)
 const roles = ref(['admin', 'user'])
 
 const showModal = ref(false)
@@ -120,15 +120,18 @@ async function saveManager() {
   if (!selectedManager.value.id) return
   await updateProfile(selectedManager.value as Profile)
   showModal.value = false
-  profiles.value = await fetchProfiles()
+  await settingsStore.setProfiles()
 }
 
+// Watch for workspace changes
+watch(() => settingsStore.currentWorkspace, async () => {
+  await settingsStore.setProfiles()
+})
+
 onMounted(async () => {
-  profiles.value = await fetchProfiles()
+  await settingsStore.setProfiles()
   await authStore.fetchProfile()
   isAdmin.value = profile.value.role === 'admin'
-
-  settingsStore.setWorkspaces()
 })
 </script>
 

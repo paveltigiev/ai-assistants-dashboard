@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabaseClient';
@@ -23,6 +23,7 @@ import { formatDate } from "@/utils/date"
 import type { Invitation } from '@/types/settingsTypes';
 import { useSettingsStore } from "@/store/settingsStore"
 import { useAuthStore } from '@/store/authStore'
+import { CheckCircle2, XCircle } from 'lucide-vue-next'
 const authStore = useAuthStore()
 
 const settingsStore = useSettingsStore()
@@ -34,17 +35,28 @@ const workspaces = computed(() => settingsStore.workspaces)
 const invitations = ref<Invitation[]>([]);
 
 async function fetchInvitations() {
-  const { data, error } = await supabase
-    .from("invitations")
-    .select("*");
-
-  if (error) {
-    console.error("Error fetching invitations:", error);
-    return;
+  if (!settingsStore.currentWorkspace?.id) {
+    invitations.value = []
+    return
   }
 
-  invitations.value = data;
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("workspace_id", settingsStore.currentWorkspace.id)
+
+  if (error) {
+    console.error("Error fetching invitations:", error)
+    return
+  }
+
+  invitations.value = data
 }
+
+// Watch for workspace changes
+watch(() => settingsStore.currentWorkspace, async () => {
+  await fetchInvitations()
+})
 
 async function sendInvitation(email: string, workspace_id: string) {
   const { error } = await supabase
@@ -70,7 +82,7 @@ function handleSubmit() {
 }
 
 onMounted(async() => {
-  fetchInvitations();
+  await fetchInvitations();
   await authStore.fetchProfile()
   isAdmin.value = profile.value.role == 'admin'
   settingsStore.setWorkspaces()
@@ -90,7 +102,6 @@ onMounted(async() => {
           <TableHeader>
             <TableRow>
               <TableHead>Email</TableHead>
-              <TableHead v-if="isAdmin">Workspace</TableHead>
               <TableHead>Дата</TableHead>
               <TableHead>Использован</TableHead>
             </TableRow>
@@ -100,15 +111,19 @@ onMounted(async() => {
               <template v-for="row in invitations" :key="row.id">
                 <TableRow>
                   <TableCell>{{ row.email }}</TableCell>
-                  <TableCell v-if="isAdmin">{{ workspaces.find(w => w.id === row.workspace_id)?.name || row.workspace_id }}</TableCell>
                   <TableCell>{{ formatDate(row.created_at) }}</TableCell>
-                  <TableCell>{{ row.used? 'Да' : 'Нет' }}</TableCell>
+                  <TableCell>
+                    <div class="flex items-center gap-2">
+                      <CheckCircle2 v-if="row.used" class="h-4 w-4 text-green-500" />
+                      <XCircle v-else class="h-4 w-4 text-red-500" />
+                    </div>
+                  </TableCell>
                 </TableRow>
               </template>
             </template>
 
             <TableRow v-else>
-              <TableCell colspan="4" class="h-24 text-center">
+              <TableCell colspan="3" class="h-24 text-center">
                 Загрузка профилей...
               </TableCell>
             </TableRow>

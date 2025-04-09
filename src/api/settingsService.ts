@@ -142,11 +142,16 @@ export const deleteScheduler = async (id: number) => {
   }
 }
 
-export const fetchProfiles = async () => {
+export const fetchProfiles = async (workspaceId?: number) => {
   try {
+    if (!workspaceId) {
+      return []
+    }
+
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
+      .eq("workspace_id", workspaceId)
 
     if (error) throw error
 

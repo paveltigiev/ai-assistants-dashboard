@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { fetchRoles, fetchPrompts, fetchSchedulers, fetchWorkspaces } from '@/api/settingsService'
+import { fetchRoles, fetchPrompts, fetchSchedulers, fetchWorkspaces, fetchProfiles } from '@/api/settingsService'
 import type { Role, Prompt, Scheduler } from '@/types/settingsTypes'
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -10,6 +10,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const schedulers = ref<Scheduler[]>([])
   const workspaces = ref<any[]>([])
   const currentWorkspace = ref<any>(null)
+  const profiles = ref<any[]>([])
 
   const setRoles = async() => {
     roles.value = await fetchRoles()
@@ -27,15 +28,21 @@ export const useSettingsStore = defineStore('settings', () => {
     workspaces.value = await fetchWorkspaces()
   }
 
+  const setProfiles = async() => {
+    profiles.value = await fetchProfiles(currentWorkspace.value?.id)
+  }
+
   return {
     roles,
     prompts,
     schedulers,
     workspaces,
     currentWorkspace,
+    profiles,
     setRoles,
     setPrompts,
     setSchedulers,
-    setWorkspaces
+    setWorkspaces,
+    setProfiles
   }
 })
