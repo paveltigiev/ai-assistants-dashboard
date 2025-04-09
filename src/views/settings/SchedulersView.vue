@@ -139,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from "vue"
+import { onMounted, computed, ref, watch } from "vue"
 import { useSettingsStore } from "@/store/settingsStore"
 import { fetchRoles } from '@/api/settingsService'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -336,6 +336,11 @@ const onSubmit = async () => {
     isDialogOpen.value = false
   }
 }
+
+// Watch for workspace changes
+watch(() => settingsStore.currentWorkspace, async () => {
+  await settingsStore.setSchedulers()
+})
 
 onMounted(async () => {
   await authStore.fetchProfile()

@@ -72,18 +72,23 @@ export const createPrompt = async (prompt: CreatePrompt) => {
   }
 }
 
-export const fetchSchedulers  = async (): Promise<Scheduler[]> => {
+export const fetchSchedulers = async (workspaceId?: number): Promise<Scheduler[]> => {
   try {
+    if (!workspaceId) {
+      return []
+    }
+
     const { data, error } = await supabase
       .from("schedulers")
       .select("*")
+      .eq("workspace_id", workspaceId)
       .order('days_after', { ascending: false })
 
     if (error) throw error
 
     return data
   } catch (error) {
-    console.log( (error as Error).message)
+    console.log((error as Error).message)
     return []
   }
 }

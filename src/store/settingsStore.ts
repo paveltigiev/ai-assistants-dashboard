@@ -20,7 +20,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   const setSchedulers = async() => {
-    schedulers.value = await fetchSchedulers()
+    schedulers.value = await fetchSchedulers(currentWorkspace.value?.id)
   }
 
   const setWorkspaces = async() => {
