@@ -175,12 +175,17 @@ export async function updateProfile(profile: Profile) {
   return data
 }
 
-export const fetchWorkspaces = async () => {
+export const fetchWorkspaces = async (workspaceId?: number) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("workspaces")
       .select("*")
 
+    if (workspaceId) {
+      query = query.eq("id", workspaceId)
+    }
+
+    const { data, error } = await query
     if (error) throw error
 
     return data

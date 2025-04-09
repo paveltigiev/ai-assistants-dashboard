@@ -17,6 +17,7 @@ import { useSettingsStore } from '@/store/settingsStore'
 const props = defineProps<{
   workspaces: any[]
   defaultWorkspace: any
+  isAdmin: boolean
 }>()
 
 const settingsStore = useSettingsStore()
@@ -54,36 +55,48 @@ onMounted(() => {
 <template>
   <SidebarMenu>
     <SidebarMenuItem>
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <SidebarMenuButton
-            size="lg"
-            class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+      <template v-if="isAdmin">
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <SidebarMenuButton
+              size="lg"
+              class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <GalleryVerticalEnd class="size-4" />
+              </div>
+              <div class="flex flex-col gap-0.5 leading-none">
+                <span class="font-semibold">Workspace</span>
+                <span class="">{{ selectedWorkspace?.name }}</span>
+              </div>
+              <ChevronsUpDown class="ml-auto" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            class="w-[--reka-dropdown-menu-trigger-width]"
+            align="start"
           >
-            <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <GalleryVerticalEnd class="size-4" />
-            </div>
-            <div class="flex flex-col gap-0.5 leading-none">
-              <span class="font-semibold">Workspace</span>
-              <span class="">{{ selectedWorkspace?.name }}</span>
-            </div>
-            <ChevronsUpDown class="ml-auto" />
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          class="w-[--reka-dropdown-menu-trigger-width]"
-          align="start"
-        >
-          <DropdownMenuItem
-            v-for="workspace in workspaces"
-            :key="workspace.id"
-            @select="saveWorkspace(workspace)"
-          >
-            {{ workspace.name }}
-            <Check v-if="workspace.id === selectedWorkspace?.id" class="ml-auto" />
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem
+              v-for="workspace in workspaces"
+              :key="workspace.id"
+              @select="saveWorkspace(workspace)"
+            >
+              {{ workspace.name }}
+              <Check v-if="workspace.id === selectedWorkspace?.id" class="ml-auto" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </template>
+      <template v-else>
+        <SidebarMenuButton size="lg">
+          <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <GalleryVerticalEnd class="size-4" />
+          </div>
+          <div class="flex flex-col gap-0.5 leading-none">
+            <span class="font-semibold">{{ selectedWorkspace?.name }}</span>
+          </div>
+        </SidebarMenuButton>
+      </template>
     </SidebarMenuItem>
   </SidebarMenu>
 </template> 

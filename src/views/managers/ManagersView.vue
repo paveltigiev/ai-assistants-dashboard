@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from "vue"
-import { fetchProfiles, updateProfile } from '@/api/settingsService'
+import { updateProfile } from '@/api/settingsService'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuthStore } from '@/store/authStore'

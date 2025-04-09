@@ -24,8 +24,8 @@ export const useSettingsStore = defineStore('settings', () => {
     schedulers.value = await fetchSchedulers(currentWorkspace.value?.id)
   }
 
-  const setWorkspaces = async() => {
-    workspaces.value = await fetchWorkspaces()
+  const setWorkspaces = async(workspaceId?: number) => {
+    workspaces.value = await fetchWorkspaces(workspaceId)
   }
 
   const setProfiles = async() => {

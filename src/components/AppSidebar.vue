@@ -94,6 +94,8 @@ onMounted(async () => {
   await authStore.fetchProfile()
   if (profile.value.role === 'admin') {
     await settingsStore.setWorkspaces()
+  } else {
+    await settingsStore.setWorkspaces(profile.value.workspace_id)
   }
 
   data.value.user.email = user.value.email
@@ -122,6 +124,7 @@ onMounted(async () => {
       <WorkspaceSwitcher
         :workspaces="data.workspace"
         :default-workspace="settingsStore.currentWorkspace"
+        :is-admin="isAdmin"
       />
       <!-- <SearchForm /> -->
     </SidebarHeader>
