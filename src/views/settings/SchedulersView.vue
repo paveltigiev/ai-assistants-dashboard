@@ -141,7 +141,6 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from "vue"
 import { useSettingsStore } from "@/store/settingsStore"
-import { fetchRoles } from '@/api/settingsService'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   Dialog,
@@ -176,7 +175,6 @@ import { supabase } from '@/lib/supabaseClient'
 import { formatTimeInput } from '@/utils/timeFormat'
 
 import type { Scheduler } from '@/types/settingsTypes'
-import type { Role } from '@/types/settingsTypes'
 
 interface FormValues {
   role: string
@@ -189,7 +187,7 @@ interface FormValues {
 
 type CreateScheduler = Omit<Scheduler, 'id'>
 
-const roles = ref<Role[]>([])
+const roles = computed(() => settingsStore.roles)
 const imagePreview = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
 
@@ -345,7 +343,6 @@ watch(() => settingsStore.currentWorkspace, async () => {
 onMounted(async () => {
   await authStore.fetchProfile()
   settingsStore.setSchedulers()
-  roles.value = await fetchRoles()
   
   if (profile.value) {
     workspace_id.value = profile.value.workspace_id
