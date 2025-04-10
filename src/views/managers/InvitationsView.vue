@@ -124,7 +124,7 @@ onMounted(async() => {
 
             <TableRow v-else>
               <TableCell colspan="3" class="h-24 text-center">
-                Загрузка профилей...
+                Загрузка приглашений...
               </TableCell>
             </TableRow>
           </TableBody>
