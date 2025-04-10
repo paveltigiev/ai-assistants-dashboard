@@ -1,3 +1,138 @@
+<script setup lang="ts">
+import { onMounted, computed, ref, watch } from "vue"
+import { useSettingsStore } from "@/store/settingsStore"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Info } from 'lucide-vue-next'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { useForm, useField } from 'vee-validate'
+import { z } from 'zod'
+import { toTypedSchema } from '@vee-validate/zod'
+import { createPrompt, updatePrompt } from '@/api/settingsService'
+import type { Prompt } from '@/types/settingsTypes'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { useAuthStore } from '@/store/authStore'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const authStore = useAuthStore()
+const profile = computed(() => authStore.profile)
+
+interface FormValues {
+  role: string
+  prompt: string
+  workspace_id?: number
+}
+
+type CreatePrompt = Omit<Prompt, 'id'>
+
+const settingsStore = useSettingsStore();
+const prompts = computed(() => settingsStore.prompts)
+
+// Watch for workspace changes
+watch(() => settingsStore.currentWorkspace, async () => {
+  await settingsStore.setPrompts()
+})
+
+const formSchema = toTypedSchema(z.object({
+  role: z.string().min(1, 'Название обязательно'),
+  prompt: z.string().min(1, 'Промпт обязателен'),
+}))
+
+const form = useForm<FormValues>({
+  validationSchema: formSchema,
+  initialValues: {
+    role: '',
+    prompt: ''
+  }
+})
+
+const { value: role } = useField<string>('role')
+const { value: prompt } = useField<string>('prompt')
+const { value: workspace_id } = useField<number>('workspace_id')
+
+const selectedPrompt = ref<Prompt | null>(null)
+const isDialogOpen = ref(false)
+
+const isAdmin = computed(() => profile.value?.role === 'admin')
+const workspaces = computed(() => settingsStore.workspaces)
+
+const handleRowClick = (row: Prompt) => {
+  selectedPrompt.value = row
+  role.value = row.role
+  prompt.value = row.prompt
+  workspace_id.value = row.workspace_id
+  isDialogOpen.value = true
+}
+
+const handleCreate = () => {
+  selectedPrompt.value = null
+  role.value = ' '
+  prompt.value = ' '
+  workspace_id.value = isAdmin.value ? undefined : profile.value.workspace_id
+  isDialogOpen.value = true
+}
+
+const onSubmit = async () => {
+  prompt.value = prompt.value.trim()
+  role.value = role.value.trim()
+  const { valid } = await form.validate()
+  if (valid) {
+    if (selectedPrompt.value) {
+      const updatedPrompt: Prompt = {
+        id: selectedPrompt.value.id,
+        role: role.value,
+        prompt: prompt.value,
+        workspace_id: workspace_id.value || profile.value.workspace_id
+      }
+      await updatePrompt(updatedPrompt)
+    } else {
+      const newPrompt: CreatePrompt = {
+        role: role.value,
+        prompt: prompt.value,
+        workspace_id: workspace_id.value || profile.value.workspace_id
+      }
+      await createPrompt(newPrompt)
+    }
+    await settingsStore.setPrompts()
+    isDialogOpen.value = false
+  }
+}
+
+onMounted(async () => {
+  settingsStore.setPrompts()
+  await authStore.fetchProfile()
+  if (isAdmin.value) {
+    await settingsStore.setWorkspaces()
+  }
+})
+</script>
+
 <template>
   <div>
     <div class="flex justify-between items-center mb-4">
@@ -158,141 +293,6 @@
     </Dialog>
   </div>
 </template>
-
-<script setup lang="ts">
-import { onMounted, computed, ref, watch } from "vue"
-import { useSettingsStore } from "@/store/settingsStore"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Info } from 'lucide-vue-next'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { useForm, useField } from 'vee-validate'
-import { z } from 'zod'
-import { toTypedSchema } from '@vee-validate/zod'
-import { createPrompt, updatePrompt } from '@/api/settingsService'
-import type { Prompt } from '@/types/settingsTypes'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { useAuthStore } from '@/store/authStore'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-
-const authStore = useAuthStore()
-const profile = computed(() => authStore.profile)
-
-interface FormValues {
-  role: string
-  prompt: string
-  workspace_id?: number
-}
-
-type CreatePrompt = Omit<Prompt, 'id'>
-
-const settingsStore = useSettingsStore();
-const prompts = computed(() => settingsStore.prompts)
-
-// Watch for workspace changes
-watch(() => settingsStore.currentWorkspace, async () => {
-  await settingsStore.setPrompts()
-})
-
-const formSchema = toTypedSchema(z.object({
-  role: z.string().min(1, 'Название обязательно'),
-  prompt: z.string().min(1, 'Промпт обязателен'),
-}))
-
-const form = useForm<FormValues>({
-  validationSchema: formSchema,
-  initialValues: {
-    role: '',
-    prompt: ''
-  }
-})
-
-const { value: role } = useField<string>('role')
-const { value: prompt } = useField<string>('prompt')
-const { value: workspace_id } = useField<number>('workspace_id')
-
-const selectedPrompt = ref<Prompt | null>(null)
-const isDialogOpen = ref(false)
-
-const isAdmin = computed(() => profile.value?.role === 'admin')
-const workspaces = computed(() => settingsStore.workspaces)
-
-const handleRowClick = (row: Prompt) => {
-  selectedPrompt.value = row
-  role.value = row.role
-  prompt.value = row.prompt
-  workspace_id.value = row.workspace_id
-  isDialogOpen.value = true
-}
-
-const handleCreate = () => {
-  selectedPrompt.value = null
-  role.value = ' '
-  prompt.value = ' '
-  workspace_id.value = isAdmin.value ? undefined : profile.value.workspace_id
-  isDialogOpen.value = true
-}
-
-const onSubmit = async () => {
-  prompt.value = prompt.value.trim()
-  role.value = role.value.trim()
-  const { valid } = await form.validate()
-  if (valid) {
-    if (selectedPrompt.value) {
-      const updatedPrompt: Prompt = {
-        id: selectedPrompt.value.id,
-        role: role.value,
-        prompt: prompt.value,
-        workspace_id: workspace_id.value || profile.value.workspace_id
-      }
-      await updatePrompt(updatedPrompt)
-    } else {
-      const newPrompt: CreatePrompt = {
-        role: role.value,
-        prompt: prompt.value,
-        workspace_id: workspace_id.value || profile.value.workspace_id
-      }
-      await createPrompt(newPrompt)
-    }
-    await settingsStore.setPrompts()
-    isDialogOpen.value = false
-  }
-}
-
-onMounted(async () => {
-  settingsStore.setPrompts()
-  await authStore.fetchProfile()
-  if (isAdmin.value) {
-    await settingsStore.setWorkspaces()
-  }
-})
-</script>
 
 <style>
 </style>

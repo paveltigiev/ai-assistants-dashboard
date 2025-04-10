@@ -1,3 +1,30 @@
+<script setup lang="ts">
+import { onMounted, computed, watch } from "vue"
+import { useRouter } from 'vue-router'
+import { useUserStore } from "@/store/userStore"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { getStatusLabel, getStatusVariant } from '@/utils/labels'
+import { formatDate } from "@/utils/date"
+import { Badge } from '@/components/ui/badge'
+import { useSettingsStore } from '@/store/settingsStore'
+
+const router = useRouter()
+const userStore = useUserStore();
+const userProfiles = computed(() => userStore.userProfiles)
+const settingsStore = useSettingsStore();
+
+const showChat = (telegram_id: number) => router.push(`/users/${telegram_id}`)
+
+// Watch for workspace changes
+watch(() => settingsStore.currentWorkspace, async () => {
+  await userStore.setUserProfiles()
+})
+
+onMounted(async () => {
+  userStore.setUserProfiles()
+})
+</script>
+
 <template>
   <div>
     <h1 class="text-2xl font-semibold mb-4">Пользователи</h1>
@@ -39,26 +66,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { onMounted, computed } from "vue"
-import { useRouter } from 'vue-router'
-import { useUserStore } from "@/store/userStore"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getStatusLabel, getStatusVariant } from '@/utils/labels'
-import { formatDate } from "@/utils/date"
-import { Badge } from '@/components/ui/badge'
-
-const router = useRouter()
-const userStore = useUserStore();
-const userProfiles = computed(() => userStore.userProfiles)
-
-const showChat = (telegram_id: number) => router.push(`/users/${telegram_id}`)
-
-onMounted(async () => {
-  userStore.setUserProfiles()
-})
-</script>
 
 <style>
 </style>

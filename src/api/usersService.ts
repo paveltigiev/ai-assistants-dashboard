@@ -3,12 +3,18 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { UserProfile } from '@/types/userTypes'
 
-export const fetchUserProfiles  = async (): Promise<UserProfile[]> => {
+export const fetchUserProfiles  = async (workspaceId?: number): Promise<UserProfile[]> => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("user_profiles")
       .select("*")
       .order('created_at', { ascending: false })
+
+    if (workspaceId) {
+      query = query.eq("workspace_id", workspaceId)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 
