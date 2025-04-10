@@ -4,17 +4,20 @@ import type { Role, Prompt, Scheduler, Profile } from '@/types/settingsTypes'
 type CreatePrompt = Omit<Prompt, 'id'>
 type CreateScheduler = Omit<Scheduler, 'id'>
 
-export const fetchRoles  = async (): Promise<Role[]> => {
+export const fetchRoles = async (workspaceId?: number): Promise<Role[]> => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("roles")
       .select("*")
+      .eq("workspace_id", workspaceId)
+
+    const { data, error } = await query
 
     if (error) throw error
 
     return data
   } catch (error) {
-    console.log( (error as Error).message)
+    console.log((error as Error).message)
     return []
   }
 }

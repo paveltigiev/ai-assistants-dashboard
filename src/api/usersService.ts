@@ -25,12 +25,12 @@ export const fetchUserProfiles  = async (workspaceId?: number): Promise<UserProf
   }
 }
 
-export const fetchUserProfile  = async (telegram_id: number): Promise<UserProfile> => {
+export const fetchUserProfile  = async (user_id: number): Promise<UserProfile> => {
   try {
     const { data, error } = await supabase
       .from("user_profiles")
       .select("*")
-      .eq("telegram_id", telegram_id)
+      .eq("id", user_id)
       .single()
     if (error) throw error
 

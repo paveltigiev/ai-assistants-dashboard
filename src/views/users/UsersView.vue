@@ -13,7 +13,7 @@ const userStore = useUserStore();
 const userProfiles = computed(() => userStore.userProfiles)
 const settingsStore = useSettingsStore();
 
-const showChat = (telegram_id: number) => router.push(`/users/${telegram_id}`)
+const showChat = (user_id: number) => router.push(`/users/${user_id}`)
 
 // Watch for workspace changes
 watch(() => settingsStore.currentWorkspace, async () => {
@@ -41,8 +41,8 @@ onMounted(async () => {
         </TableHeader>
         <TableBody>
           <template v-if="userProfiles.length">
-            <template v-for="row in userProfiles" :key="row.telegram_id">
-              <TableRow  @click="showChat(row.telegram_id)" class="cursor-pointer">
+            <template v-for="row in userProfiles" :key="row.id">
+              <TableRow  @click="showChat(row.id)" class="cursor-pointer">
                 <TableCell>{{ `${row.profile.first_name || ''} ${row.profile.last_name || ''}` }}</TableCell>
                 <TableCell>{{ row.role }}</TableCell>
                 <TableCell>

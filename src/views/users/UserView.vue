@@ -206,18 +206,18 @@ import { Badge } from '@/components/ui/badge'
 import { Icon } from '@iconify/vue'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { fetchRoles } from '@/api/settingsService'
 import { parseDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
-import type { Role } from '@/types/settingsTypes'
+import { useSettingsStore } from '@/store/settingsStore'
 
 const route = useRoute()
-const chatId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+const userId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
 const chatStore = useChatStore()
 const userStore = useUserStore()
+const settingsStore = useSettingsStore()
 const isDialogOpen = ref(false)
 const messages = computed(() => chatStore.messages)
-const roles = ref<Role[]>([])
+const roles = computed(() => settingsStore.roles)
 
 const userProfile = computed(() => userStore.userProfile)
 
@@ -277,15 +277,14 @@ const onSubmit = async () => {
       onboarded_at: onboarded_at.value || ''
     }
     await userStore.updateUserProfile(updatedUser)
-    await userStore.setUserProfile(+chatId)
+    await userStore.setUserProfile(+userId)
     isDialogOpen.value = false
   }
 }
 
 onMounted(async () => {
-  chatStore.setChat(+chatId)
-  userStore.setUserProfile(+chatId)
-  roles.value = await fetchRoles()
+  await userStore.setUserProfile(+userId)
+  chatStore.setChat(userProfile.value?.telegram_id || 0)
 })
 </script>
 

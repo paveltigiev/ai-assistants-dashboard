@@ -28,6 +28,8 @@ watch(() => props.defaultWorkspace, (newWorkspace) => {
   if (newWorkspace) {
     selectedWorkspace.value = newWorkspace
     settingsStore.currentWorkspace = newWorkspace
+
+    settingsStore.setRoles()
   }
 })
 

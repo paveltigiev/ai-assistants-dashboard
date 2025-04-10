@@ -13,7 +13,12 @@ export const useSettingsStore = defineStore('settings', () => {
   const profiles = ref<any[]>([])
 
   const setRoles = async() => {
-    roles.value = await fetchRoles()
+    const settingsStore = useSettingsStore()
+    if (!settingsStore.currentWorkspace?.id) {
+      console.warn('No workspace ID available, skipping roles fetch')
+      return
+    }
+    roles.value = await fetchRoles(settingsStore.currentWorkspace.id)
   }
 
   const setPrompts = async() => {

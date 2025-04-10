@@ -23,8 +23,8 @@ export const useUserStore = defineStore('user', () => {
     userProfiles.value = await fetchUserProfiles(settingsStore.currentWorkspace.id)
   }
 
-  const setUserProfile = async(telegram_id: number) => {
-    userProfile.value = await fetchUserProfile(telegram_id)
+  const setUserProfile = async(user_id: number) => {
+    userProfile.value = await fetchUserProfile(user_id)
   }
 
   const updateUserProfile = async(user: UserProfile) => {
