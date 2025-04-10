@@ -21,7 +21,7 @@
               </div>
             </div>
             <div v-if="!messages.length" class="flex items-center justify-center h-24 text-gray-500">
-              Нет сообщений
+              Загрузка сообщений...
             </div>
           </div>
         </CardContent>
@@ -164,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from "vue"
+import { onMounted, computed, ref, watch } from "vue"
 import { useChatStore } from "@/store/chatStore"
 import { useRoute } from 'vue-router'
 import { useUserStore } from "@/store/userStore"
@@ -281,6 +281,10 @@ const onSubmit = async () => {
     isDialogOpen.value = false
   }
 }
+
+watch(() => settingsStore.currentWorkspace, async () => {
+  await chatStore.setChat(userProfile.value?.telegram_id || 0)
+})
 
 onMounted(async () => {
   await userStore.setUserProfile(+userId)

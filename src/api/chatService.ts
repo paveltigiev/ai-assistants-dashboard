@@ -18,18 +18,24 @@ export const fetchChats  = async (): Promise<Chat[]> => {
   }
 }
 
-export const fetchMessages  = async (chat_id: number): Promise<Message[]> => {
+export const fetchMessages = async (chat_id: number, workspaceId?: number): Promise<Message[]> => {
   try {
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('chat_id', chat_id)
-      .order('created_at', { ascending: false })
+    let query = supabase
+      .from("messages")
+      .select("*")
+      .eq("chat_id", chat_id)
+
+    if (workspaceId) {
+      query = query.eq("workspace_id", workspaceId)
+    }
+
+    const { data, error } = await query
+
     if (error) throw error
 
-    return messages
+    return data
   } catch (error) {
-    console.log( (error as Error).message)
+    console.log((error as Error).message)
     return []
   }
 }
