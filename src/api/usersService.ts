@@ -6,7 +6,7 @@ import type { UserProfile } from '@/types/userTypes'
 export const fetchUserProfiles  = async (workspaceId?: number): Promise<UserProfile[]> => {
   try {
     let query = supabase
-      .from("user_profiles")
+      .from("extended_user_profiles")
       .select("*")
       .order('created_at', { ascending: false })
 

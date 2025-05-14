@@ -7,4 +7,6 @@ export interface UserProfile {
   status: string;
   workspace_id: number;
   profile: Record<string, any>;
+  message_count: number;
+  last_message_at: string;
 }

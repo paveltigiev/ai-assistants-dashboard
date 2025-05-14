@@ -34,9 +34,11 @@ onMounted(async () => {
           <TableRow>
             <TableHead>Пользователь</TableHead>
             <TableHead>Роль</TableHead>
+            <TableHead>Cообщений</TableHead>
+            <TableHead>Последнее сообщение</TableHead>
             <TableHead>Статус</TableHead>
-            <TableHead>Дата регистрации</TableHead>
-            <TableHead>Дата онбординга</TableHead>
+            <TableHead>Регистрация</TableHead>
+            <TableHead>Онбординг</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -45,6 +47,8 @@ onMounted(async () => {
               <TableRow  @click="showChat(row.id)" class="cursor-pointer">
                 <TableCell>{{ `${row.profile.first_name || ''} ${row.profile.last_name || ''}` }}</TableCell>
                 <TableCell>{{ row.role }}</TableCell>
+                <TableCell>{{ row.message_count }}</TableCell>
+                <TableCell>{{ row.last_message_at ? formatDate(row.last_message_at) : '-' }}</TableCell>
                 <TableCell>
                   <Badge :variant="getStatusVariant(row.status)">
                     {{ getStatusLabel(row.status) }}
