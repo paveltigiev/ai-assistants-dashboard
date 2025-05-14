@@ -47,6 +47,8 @@ interface FormValues {
   role: string
   prompt: string
   workspace_id?: number
+  greetings?: string
+  image?: string
 }
 
 type CreatePrompt = Omit<Prompt, 'id'>
@@ -68,12 +70,16 @@ const form = useForm<FormValues>({
   validationSchema: formSchema,
   initialValues: {
     role: '',
-    prompt: ''
+    prompt: '',
+    greetings: '',
+    image: ''
   }
 })
 
 const { value: role } = useField<string>('role')
 const { value: prompt } = useField<string>('prompt')
+const { value: greetings } = useField<string>('greetings')
+const { value: image } = useField<string>('image')
 const { value: workspace_id } = useField<number>('workspace_id')
 
 const selectedPrompt = ref<Prompt | null>(null)
@@ -86,6 +92,8 @@ const handleRowClick = (row: Prompt) => {
   selectedPrompt.value = row
   role.value = row.role
   prompt.value = row.prompt
+  greetings.value = row.greetings
+  image.value = row.image ?? ''
   workspace_id.value = row.workspace_id
   isDialogOpen.value = true
 }
@@ -94,6 +102,8 @@ const handleCreate = () => {
   selectedPrompt.value = null
   role.value = ' '
   prompt.value = ' '
+  greetings.value = ''
+  image.value = ''
   workspace_id.value = isAdmin.value ? undefined : profile.value.workspace_id
   isDialogOpen.value = true
 }
@@ -108,14 +118,18 @@ const onSubmit = async () => {
         id: selectedPrompt.value.id,
         role: role.value,
         prompt: prompt.value,
-        workspace_id: workspace_id.value || profile.value.workspace_id
+        workspace_id: workspace_id.value || profile.value.workspace_id,
+        greetings: greetings.value,
+        image: image.value
       }
       await updatePrompt(updatedPrompt)
     } else {
       const newPrompt: CreatePrompt = {
         role: role.value,
         prompt: prompt.value,
-        workspace_id: workspace_id.value || profile.value.workspace_id
+        workspace_id: workspace_id.value || profile.value.workspace_id,
+        greetings: greetings.value,
+        image: image.value
       }
       await createPrompt(newPrompt)
     }
@@ -144,7 +158,9 @@ onMounted(async () => {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead></TableHead>
             <TableHead>Название</TableHead>
+            <TableHead>Приветствие</TableHead>
             <TableHead>Промпт</TableHead>
           </TableRow>
         </TableHeader>
@@ -152,6 +168,9 @@ onMounted(async () => {
           <template v-if="prompts.length">
             <template v-for="row in prompts" :key="row.id">
               <TableRow class="cursor-pointer" @click="handleRowClick(row)">
+                <TableCell class="w-1/12">
+                  <img :src="row.image" alt="Image" class="h-10 rounded-md" v-if="row.image">
+                </TableCell>
                 <TableCell class="w-2/12">
                   <TooltipProvider v-if="row.role === 'system'">
                     <Tooltip>
@@ -197,7 +216,8 @@ onMounted(async () => {
 
                   <span v-else>{{ row.role }}</span>
                 </TableCell>
-                <TableCell class="w-10/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
+                <TableCell class="w-3/12">{{ row.greetings ? row.greetings.slice(0, 150) : '-' }}{{ row.greetings && row.greetings.length > 150 ? '...' : '' }}</TableCell>
+                <TableCell class="w-6/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
           </template>
@@ -242,15 +262,6 @@ onMounted(async () => {
         </div>
 
         <form @submit.prevent="onSubmit" class="space-y-4">
-          <FormField name="role">
-            <FormItem>
-              <FormLabel>Название</FormLabel>
-              <FormControl>
-                <Input v-model="role" placeholder="Введите название" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          </FormField>
           <FormField name="workspace_id" v-if="isAdmin">
             <FormItem>
               <FormLabel>Workspace</FormLabel>
@@ -269,6 +280,26 @@ onMounted(async () => {
               <FormMessage />
             </FormItem>
           </FormField>
+
+          <FormField name="role">
+            <FormItem>
+              <FormLabel>Название</FormLabel>
+              <FormControl>
+                <Input v-model="role" placeholder="Введите название" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+
+          <FormField name="greetings">
+            <FormItem>
+              <FormLabel>Приветствие</FormLabel>
+              <FormControl>
+                <Textarea v-model="greetings" placeholder="Введите приветствие" />
+              </FormControl>
+            </FormItem>
+          </FormField>
+
           <FormField name="prompt">
             <FormItem>
               <FormLabel>Промпт</FormLabel>
@@ -282,6 +313,16 @@ onMounted(async () => {
               <FormMessage />
             </FormItem>
           </FormField>
+
+          <FormField name="image">
+            <FormItem>
+              <FormLabel>Изображение</FormLabel>
+              <FormControl>
+                <Input v-model="image" placeholder="Введите изображение" />
+              </FormControl>
+            </FormItem>
+          </FormField>
+
           <div class="flex justify-end gap-2">
             <Button type="button" variant="outline" @click="isDialogOpen = false">
               Отмена
