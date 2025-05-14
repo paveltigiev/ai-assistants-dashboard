@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { useFormField } from './useFormField'
 
-const props = defineProps<LabelProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<LabelProps & { class?: HTMLAttributes['class'], forceError?: boolean }>()
 
 const { error, formItemId } = useFormField()
 </script>
@@ -13,7 +13,7 @@ const { error, formItemId } = useFormField()
 <template>
   <Label
     :class="cn(
-      error && 'text-destructive',
+      (props.forceError !== undefined ? props.forceError : error) && 'text-destructive',
       props.class,
     )"
     :for="formItemId"

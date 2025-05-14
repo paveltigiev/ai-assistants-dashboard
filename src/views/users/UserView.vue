@@ -127,7 +127,7 @@
           </FormField>
           <FormField name="onboarded_at">
             <FormItem>
-              <FormLabel>Дата онбординга</FormLabel>
+              <FormLabel :force-error="form.submitCount.value > 0 || onboardedAtMeta.touched">Дата онбординга</FormLabel>
               <FormControl>
                 <Popover>
                   <PopoverTrigger as-child>
@@ -148,7 +148,7 @@
                   </PopoverContent>
                 </Popover>
               </FormControl>
-              <FormMessage />
+              <FormMessage v-if="form.submitCount.value > 0 || onboardedAtMeta.touched" />
             </FormItem>
           </FormField>
           <div class="flex justify-end gap-2">
@@ -232,7 +232,7 @@ const formSchema = toTypedSchema(z.object({
   status: z.enum(['init', 'active', 'blocked'], {
     errorMap: () => ({ message: 'Выберите статус' })
   }),
-  onboarded_at: z.string().nullable()
+  onboarded_at: z.string().min(1, 'Дата онбординга обязательна')
 }))
 
 const form = useForm<FormValues>({
@@ -240,16 +240,17 @@ const form = useForm<FormValues>({
   initialValues: {
     role: '',
     status: '',
-    onboarded_at: null
-  }
+    onboarded_at: ''
+  },
+  validateOnMount: false
 })
 
 const { value: role } = useField<string>('role')
 const { value: status } = useField<string>('status')
-const { value: onboarded_at } = useField<string | null>('onboarded_at')
+const { value: onboarded_at, meta: onboardedAtMeta } = useField<string>('onboarded_at')
 
 const handleDateChange = (date: DateValue | undefined) => {
-  onboarded_at.value = date ? new Date(date.toString()).toISOString() : null
+  onboarded_at.value = date ? new Date(date.toString()).toISOString() : ''
 }
 
 const getDateValue = (dateString: string | null) => {
@@ -262,7 +263,7 @@ const editUser = () => {
   if (userProfile.value) {
     role.value = userProfile.value.role
     status.value = userProfile.value.status
-    onboarded_at.value = userProfile.value.onboarded_at
+    onboarded_at.value = userProfile.value.onboarded_at || ''
     isDialogOpen.value = true
   }
 }
