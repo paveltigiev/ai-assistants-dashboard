@@ -1,3 +1,133 @@
+<script setup lang="ts">
+import { onMounted, computed, ref, watch } from "vue"
+import { useChatStore } from "@/store/chatStore"
+import { useRoute } from 'vue-router'
+import { useUserStore } from "@/store/userStore"
+import { useForm, useField } from 'vee-validate'
+import { z } from 'zod'
+import { toTypedSchema } from '@vee-validate/zod'
+import { Button } from '@/components/ui/button'
+import { getStatusLabel, getStatusVariant } from '@/utils/labels'
+import { formatDate } from "@/utils/date"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Icon } from '@iconify/vue'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { parseDate } from '@internationalized/date'
+import type { DateValue } from '@internationalized/date'
+import { useSettingsStore } from '@/store/settingsStore'
+
+const route = useRoute()
+const userId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+const chatStore = useChatStore()
+const userStore = useUserStore()
+const settingsStore = useSettingsStore()
+const isDialogOpen = ref(false)
+const messages = computed(() => chatStore.messages)
+const roles = computed(() => settingsStore.roles)
+
+const userProfile = computed(() => userStore.userProfile)
+
+interface FormValues {
+  role: string
+  status: string
+  onboarded_at: string | null
+}
+
+const formSchema = toTypedSchema(z.object({
+  role: z.string().min(1, 'Роль обязательна'),
+  status: z.enum(['init', 'active', 'blocked'], {
+    errorMap: () => ({ message: 'Выберите статус' })
+  }),
+  onboarded_at: z.string().min(1, 'Дата онбординга обязательна')
+}))
+
+const form = useForm<FormValues>({
+  validationSchema: formSchema,
+  initialValues: {
+    role: '',
+    status: '',
+    onboarded_at: ''
+  },
+  validateOnMount: false
+})
+
+const { value: role } = useField<string>('role')
+const { value: status } = useField<string>('status')
+const { value: onboarded_at, meta: onboardedAtMeta } = useField<string>('onboarded_at')
+
+const handleDateChange = (date: DateValue | undefined) => {
+  onboarded_at.value = date ? new Date(date.toString()).toISOString() : ''
+}
+
+const getDateValue = (dateString: string | null) => {
+  if (!dateString) return undefined
+  const date = new Date(dateString)
+  return parseDate(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`)
+}
+
+const editUser = () => {
+  if (userProfile.value) {
+    role.value = userProfile.value.role
+    status.value = userProfile.value.status
+    onboarded_at.value = userProfile.value.onboarded_at || ''
+    isDialogOpen.value = true
+  }
+}
+
+const onSubmit = async () => {
+  const { valid } = await form.validate()
+  if (valid && userProfile.value) {
+    const updatedUser = {
+      ...userProfile.value,
+      role: role.value,
+      status: status.value,
+      onboarded_at: onboarded_at.value || ''
+    }
+    await userStore.updateUserProfile(updatedUser)
+    await userStore.setUserProfile(+userId)
+    isDialogOpen.value = false
+  }
+}
+
+watch(() => settingsStore.currentWorkspace, async () => {
+  await chatStore.setChat(userProfile.value?.telegram_id || 0)
+})
+
+onMounted(async () => {
+  await userStore.setUserProfile(+userId)
+  chatStore.setChat(userProfile.value?.telegram_id || 0)
+})
+</script>
+
 <template>
   <div class="flex items-start gap-4">
     <div class="w-2/3">
@@ -21,7 +151,7 @@
               </div>
             </div>
             <div v-if="!messages.length" class="flex items-center justify-center h-24 text-gray-500">
-              Загрузка сообщений...
+              Сообщений нет 🤷🏻‍♂️
             </div>
           </div>
         </CardContent>
@@ -162,136 +292,6 @@
     </Dialog>
   </div>
 </template>
-
-<script setup lang="ts">
-import { onMounted, computed, ref, watch } from "vue"
-import { useChatStore } from "@/store/chatStore"
-import { useRoute } from 'vue-router'
-import { useUserStore } from "@/store/userStore"
-import { useForm, useField } from 'vee-validate'
-import { z } from 'zod'
-import { toTypedSchema } from '@vee-validate/zod'
-import { Button } from '@/components/ui/button'
-import { getStatusLabel, getStatusVariant } from '@/utils/labels'
-import { formatDate } from "@/utils/date"
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Icon } from '@iconify/vue'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { parseDate } from '@internationalized/date'
-import type { DateValue } from '@internationalized/date'
-import { useSettingsStore } from '@/store/settingsStore'
-
-const route = useRoute()
-const userId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
-const chatStore = useChatStore()
-const userStore = useUserStore()
-const settingsStore = useSettingsStore()
-const isDialogOpen = ref(false)
-const messages = computed(() => chatStore.messages)
-const roles = computed(() => settingsStore.roles)
-
-const userProfile = computed(() => userStore.userProfile)
-
-interface FormValues {
-  role: string
-  status: string
-  onboarded_at: string | null
-}
-
-const formSchema = toTypedSchema(z.object({
-  role: z.string().min(1, 'Роль обязательна'),
-  status: z.enum(['init', 'active', 'blocked'], {
-    errorMap: () => ({ message: 'Выберите статус' })
-  }),
-  onboarded_at: z.string().min(1, 'Дата онбординга обязательна')
-}))
-
-const form = useForm<FormValues>({
-  validationSchema: formSchema,
-  initialValues: {
-    role: '',
-    status: '',
-    onboarded_at: ''
-  },
-  validateOnMount: false
-})
-
-const { value: role } = useField<string>('role')
-const { value: status } = useField<string>('status')
-const { value: onboarded_at, meta: onboardedAtMeta } = useField<string>('onboarded_at')
-
-const handleDateChange = (date: DateValue | undefined) => {
-  onboarded_at.value = date ? new Date(date.toString()).toISOString() : ''
-}
-
-const getDateValue = (dateString: string | null) => {
-  if (!dateString) return undefined
-  const date = new Date(dateString)
-  return parseDate(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`)
-}
-
-const editUser = () => {
-  if (userProfile.value) {
-    role.value = userProfile.value.role
-    status.value = userProfile.value.status
-    onboarded_at.value = userProfile.value.onboarded_at || ''
-    isDialogOpen.value = true
-  }
-}
-
-const onSubmit = async () => {
-  const { valid } = await form.validate()
-  if (valid && userProfile.value) {
-    const updatedUser = {
-      ...userProfile.value,
-      role: role.value,
-      status: status.value,
-      onboarded_at: onboarded_at.value || ''
-    }
-    await userStore.updateUserProfile(updatedUser)
-    await userStore.setUserProfile(+userId)
-    isDialogOpen.value = false
-  }
-}
-
-watch(() => settingsStore.currentWorkspace, async () => {
-  await chatStore.setChat(userProfile.value?.telegram_id || 0)
-})
-
-onMounted(async () => {
-  await userStore.setUserProfile(+userId)
-  chatStore.setChat(userProfile.value?.telegram_id || 0)
-})
-</script>
 
 <style scoped lang="scss">
 .messages {

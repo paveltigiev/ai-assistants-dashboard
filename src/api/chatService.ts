@@ -24,6 +24,7 @@ export const fetchMessages = async (chat_id: number, workspaceId?: number): Prom
       .from("messages")
       .select("*")
       .eq("chat_id", chat_id)
+      .order('id', { ascending: false })
 
     if (workspaceId) {
       query = query.eq("workspace_id", workspaceId)
