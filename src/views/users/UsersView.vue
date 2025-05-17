@@ -34,11 +34,10 @@ onMounted(async () => {
           <TableRow>
             <TableHead>Пользователь</TableHead>
             <TableHead>Роль</TableHead>
-            <TableHead>Cообщений</TableHead>
-            <TableHead>Последнее сообщение</TableHead>
-            <TableHead>Статус</TableHead>
-            <TableHead>Регистрация</TableHead>
+            <TableHead>Cообщения</TableHead>
+            <TableHead>Создан</TableHead>
             <TableHead>Онбординг</TableHead>
+            <TableHead>Статус</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -47,22 +46,38 @@ onMounted(async () => {
               <TableRow  @click="showChat(row.id)" class="cursor-pointer">
                 <TableCell>{{ `${row.profile.first_name || ''} ${row.profile.last_name || ''}` }}</TableCell>
                 <TableCell>{{ row.role }}</TableCell>
-                <TableCell>{{ row.message_count }}</TableCell>
-                <TableCell>{{ row.last_message_at ? formatDate(row.last_message_at) : '-' }}</TableCell>
+                <TableCell>
+                  <div class="flex items-center gap-1" v-if="row.message_count">
+                    {{ row.message_count }}
+                    <span class=" text-gray-500">
+                      ({{ row.last_message_at ? formatDate(row.last_message_at) : '-' }})
+                    </span>
+                  </div>
+                  <div class=" text-gray-500" v-else>
+                    Нет сообщений
+                  </div>
+                </TableCell>
+                <TableCell>{{ row.created_at ? formatDate(row.created_at, 'DD.MM.YYYY') : '-' }}</TableCell>
+                <TableCell>
+                  <div class="flex items-center gap-1" v-if="row.onboarded_at">
+                    {{ row.onboarded_at ? formatDate(row.onboarded_at, 'DD.MM.YYYY') : '-' }}
+                    <span class=" text-gray-500">
+                      ({{row.days_after_onboarding}})
+                    </span>
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge :variant="getStatusVariant(row.status)">
                     {{ getStatusLabel(row.status) }}
                   </Badge>
                 </TableCell>
-                <TableCell>{{ row.created_at ? formatDate(row.created_at) : '-' }}</TableCell>
-                <TableCell>{{ row.onboarded_at ? formatDate(row.onboarded_at) : '-' }}</TableCell>
               </TableRow>
             </template>
           </template>
 
           <TableRow v-else>
             <TableCell colspan="5" class="h-24 text-center">
-              Загрузка пользователей...
+              Нет пользователей.
             </TableCell>
           </TableRow>
         </TableBody>

@@ -9,4 +9,5 @@ export interface UserProfile {
   profile: Record<string, any>;
   message_count: number;
   last_message_at: string;
+  days_after_onboarding: number;
 }

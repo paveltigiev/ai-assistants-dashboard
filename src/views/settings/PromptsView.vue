@@ -224,7 +224,7 @@ onMounted(async () => {
 
           <TableRow v-else>
             <TableCell colspan="3" class="h-24 text-center">
-              Загрузка промптов...
+              Нет промптов. Создайте новый промпт.
             </TableCell>
           </TableRow>
         </TableBody>
