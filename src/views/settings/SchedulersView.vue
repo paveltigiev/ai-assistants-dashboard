@@ -27,7 +27,7 @@
                   <img v-if="row.image_url" :src="row.image_url" class="w-16 h-16 object-cover rounded" />
                   <span v-else>-</span>
                 </TableCell>
-                <TableCell class="w-8/12">{{ row.prompt.slice(0, 300) }}{{ row.prompt.length > 300 ? '...' : '' }}</TableCell>
+                <TableCell class="w-8/12">{{ row.prompt && row.prompt.length > 300 ? row.prompt.slice(0, 300) : row.prompt }}{{ row.prompt && row.prompt.length > 300 ? '...' : '' }}</TableCell>
               </TableRow>
             </template>
           </template>
@@ -121,6 +121,24 @@
               <FormMessage />
             </FormItem>
           </FormField>
+          <FormField name="workspace_id" v-if="isAdmin">
+            <FormItem>
+              <FormLabel>Workspace</FormLabel>
+              <FormControl>
+                <Select v-model="workspace_id">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите workspace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="workspace in workspaces" :key="workspace.id" :value="workspace.id">
+                      {{ workspace.name }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
           <div class="flex justify-between gap-2">
             <Button v-if="selectedScheduler" type="button" variant="destructive" @click="handleDelete(selectedScheduler)">
               Удалить
@@ -129,7 +147,7 @@
               <Button type="button" variant="outline" @click="isDialogOpen = false">
                 Отмена
               </Button>
-              <Button type="submit">Сохранить</Button>
+              <Button type="submit" :disabled="isLoading"> {{isLoading ? 'Сохраняется...' : 'Сохранить'}} </Button>
             </div>
           </div>
         </form>
@@ -190,12 +208,16 @@ type CreateScheduler = Omit<Scheduler, 'id'>
 const roles = computed(() => settingsStore.roles)
 const imagePreview = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
+const isLoading = ref(false)
 
 const authStore = useAuthStore()
 const settingsStore = useSettingsStore();
 const schedulers = computed(() => settingsStore.schedulers)
 
 const profile = computed(() => authStore.profile)
+
+const isAdmin = computed(() => profile.value?.role === 'admin')
+const workspaces = computed(() => settingsStore.workspaces)
 
 const formSchema = toTypedSchema(z.object({
   role: z.string().min(1, 'Роль обязательна'),
@@ -296,6 +318,7 @@ const handleTimeInput = (e: Event) => {
 }
 
 const onSubmit = async () => {
+  isLoading.value = true
   prompt.value = prompt.value.trim()
   const { valid } = await form.validate()
   if (valid) {
@@ -333,11 +356,18 @@ const onSubmit = async () => {
     await settingsStore.setSchedulers()
     isDialogOpen.value = false
   }
+  isLoading.value = false
 }
 
 // Watch for workspace changes
 watch(() => settingsStore.currentWorkspace, async () => {
   await settingsStore.setSchedulers()
+})
+
+watch(() => workspace_id.value, async (newWorkspaceId) => {
+  if (newWorkspaceId) {
+    await settingsStore.setRoles()
+  }
 })
 
 onMounted(async () => {
