@@ -4,6 +4,26 @@
       <h1 class="text-2xl font-semibold">Рассылки</h1>
       <Button @click="handleCreate">Создать рассылку</Button>
     </div>
+    
+
+    <div class="filters flex gap-2 mb-4">
+      <div class="filter">
+        <Input v-model="daysFilter" placeholder="Фильтр по дням" />
+      </div>
+      <div class="filter">
+        <Select v-model="roleFilter">
+          <SelectTrigger>
+            <SelectValue placeholder="Фильтр по роли" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="role in roles" :key="role.id" :value="role.role">
+              {{ role.role }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button @click="resetFilters" variant="outline">Сбросить фильтры</Button>
+    </div>
 
     <div class="rounded-md border">
       <Table>
@@ -18,7 +38,7 @@
         </TableHeader>
         <TableBody>
           <template v-if="schedulers.length">
-            <template v-for="row in schedulers" :key="row.id">
+            <template v-for="row in filteredSchedulers" :key="row.id">
               <TableRow class="cursor-pointer" @click="handleRowClick(row)">
                 <TableCell class="w-1/12">{{ row.role }}</TableCell>
                 <TableCell class="w-1/12">{{ row.days_after }}</TableCell>
@@ -210,9 +230,13 @@ const imagePreview = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
 const isLoading = ref(false)
 
+const roleFilter = ref('')
+const daysFilter = ref('')
+const filteredSchedulers = ref<Scheduler[]>([])
 const authStore = useAuthStore()
 const settingsStore = useSettingsStore();
 const schedulers = computed(() => settingsStore.schedulers)
+
 
 const profile = computed(() => authStore.profile)
 
@@ -370,9 +394,31 @@ watch(() => workspace_id.value, async (newWorkspaceId) => {
   }
 })
 
+watch(() => roleFilter.value, async () => {
+  filterSchedulers()
+})
+watch(() => daysFilter.value, async () => {
+  filterSchedulers()
+})
+
+const resetFilters = () => {
+  roleFilter.value = ''
+  daysFilter.value = ''
+  filterSchedulers()
+}
+
+const filterSchedulers = () => {
+  filteredSchedulers.value = schedulers.value.filter((scheduler) => {
+    const roleMatch = !roleFilter.value || scheduler.role.toLowerCase().includes(roleFilter.value.toLowerCase())
+    const daysMatch = !daysFilter.value || scheduler.days_after.toString() === daysFilter.value
+    return roleMatch && daysMatch
+  })
+}
+
 onMounted(async () => {
   await authStore.fetchProfile()
-  settingsStore.setSchedulers()
+  await settingsStore.setSchedulers()
+  filterSchedulers()
   
   if (profile.value) {
     workspace_id.value = profile.value.workspace_id
