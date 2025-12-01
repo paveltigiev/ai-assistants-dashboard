@@ -7,6 +7,7 @@ import { useForm, useField } from 'vee-validate'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { getStatusLabel, getStatusVariant } from '@/utils/labels'
 import { formatDate } from "@/utils/date"
 import {
@@ -60,6 +61,7 @@ interface FormValues {
   role: string
   status: string
   onboarded_at: string | null
+  comments?: string
 }
 
 const formSchema = toTypedSchema(z.object({
@@ -67,7 +69,8 @@ const formSchema = toTypedSchema(z.object({
   status: z.enum(['init', 'active', 'blocked'], {
     errorMap: () => ({ message: 'Выберите статус' })
   }),
-  onboarded_at: z.string().min(1, 'Дата онбординга обязательна')
+  onboarded_at: z.string().min(1, 'Дата онбординга обязательна'),
+  comments: z.string().optional()
 }))
 
 const form = useForm<FormValues>({
@@ -75,7 +78,8 @@ const form = useForm<FormValues>({
   initialValues: {
     role: '',
     status: '',
-    onboarded_at: ''
+    onboarded_at: '',
+    comments: ''
   },
   validateOnMount: false
 })
@@ -83,6 +87,7 @@ const form = useForm<FormValues>({
 const { value: role } = useField<string>('role')
 const { value: status } = useField<string>('status')
 const { value: onboarded_at, meta: onboardedAtMeta } = useField<string>('onboarded_at')
+const { value: comments } = useField<string | undefined>('comments')
 
 const handleDateChange = (date: DateValue | undefined) => {
   onboarded_at.value = date ? new Date(date.toString()).toISOString() : ''
@@ -99,6 +104,7 @@ const editUser = () => {
     role.value = userProfile.value.role
     status.value = userProfile.value.status
     onboarded_at.value = userProfile.value.onboarded_at || ''
+    comments.value = userProfile.value.comments || ''
     isDialogOpen.value = true
   }
 }
@@ -110,7 +116,8 @@ const onSubmit = async () => {
       ...userProfile.value,
       role: role.value,
       status: status.value,
-      onboarded_at: onboarded_at.value || ''
+      onboarded_at: onboarded_at.value || '',
+      comments: comments.value || null
     }
     await userStore.updateUserProfile(updatedUser)
     await userStore.setUserProfile(+userId)
@@ -202,6 +209,11 @@ onMounted(async () => {
               <span v-if="userProfile?.onboarded_at">{{ formatDate(userProfile?.onboarded_at) }}</span>
               <span v-else>Не выполнен</span>
             </div>
+            <div class="flex flex-col gap-1">
+              <span class="font-medium">Комментарий:</span>
+              <span v-if="userProfile?.comments">{{ userProfile.comments }}</span>
+              <span v-else class="text-gray-500">Нет комментария</span>
+            </div>
           </div>
           <div v-else class="text-center text-gray-500">
             Информация о пользователе не найдена
@@ -281,6 +293,17 @@ onMounted(async () => {
               <FormMessage v-if="form.submitCount.value > 0 || onboardedAtMeta.touched" />
             </FormItem>
           </FormField>
+
+          <FormField name="comments">
+            <FormItem>
+              <FormLabel>Комментарий</FormLabel>
+              <FormControl>
+                <Textarea v-model="comments" placeholder="Введите комментарий" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+
           <div class="flex justify-end gap-2">
             <Button type="button" variant="outline" @click="isDialogOpen = false">
               Отмена

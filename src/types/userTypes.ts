@@ -10,4 +10,5 @@ export interface UserProfile {
   message_count: number;
   last_message_at: string;
   days_after_onboarding: number;
+  comments?: string | null;
 }
