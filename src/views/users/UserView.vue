@@ -55,6 +55,13 @@ const settingsStore = useSettingsStore()
 const isDialogOpen = ref(false)
 const messages = computed(() => chatStore.messages)
 const roles = computed(() => settingsStore.roles)
+const message = ref('')
+
+const sendMessage = async () => {
+  await chatStore.sendMessage(userProfile.value?.telegram_id || 0, message.value)
+  message.value = ''
+  chatStore.setChat(userProfile.value?.telegram_id || 0)
+}
 
 const userProfile = computed(() => userStore.userProfile)
 
@@ -209,7 +216,7 @@ onMounted(async () => {
         </CardContent>
         
         <hr class="mb-4" />
-        
+
         <CardContent>
           <div v-if="userProfile" class="flex flex-col gap-2">
             <div class="flex gap-2">
@@ -240,6 +247,21 @@ onMounted(async () => {
             Информация о пользователе не найдена
           </div>
 
+        </CardContent>
+      </Card>
+
+      <Card class="mt-4">
+        <CardHeader>
+          <CardTitle>Сообщение</CardTitle>
+          <CardDescription>Отправка сообщения пользователю</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form @submit.prevent="sendMessage">
+            <div class="flex flex-col gap-2">
+              <Textarea v-model="message" placeholder="Введите сообщение" />
+              <Button type="submit">Отправить</Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
