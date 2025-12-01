@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { fetchUserProfiles, fetchUserProfile, updateUserProfile as updateUserProfileApi } from '@/api/usersService'
+import { fetchUserProfiles, fetchUserProfile, updateUserProfile as updateUserProfileApi, deleteUserProfile as deleteUserProfileApi } from '@/api/usersService'
 import type { UserProfile } from '@/types/userTypes'
 import { useSettingsStore } from '@/store/settingsStore'
 
@@ -31,7 +31,18 @@ export const useUserStore = defineStore('user', () => {
     return await updateUserProfileApi(user)
   }
 
+  const deleteUserProfile = async(user_id: number) => {
+    const result = await deleteUserProfileApi(user_id)
+    if (result) {
+      userProfiles.value = userProfiles.value.filter(user => user.id !== user_id)
+      if (userProfile.value?.id === user_id) {
+        userProfile.value = undefined
+      }
+    }
+    return result
+  }
+
   return {
-    userProfiles, userProfile, setUserProfiles, setUserProfile, updateUserProfile
+    userProfiles, userProfile, setUserProfiles, setUserProfile, updateUserProfile, deleteUserProfile
   }
 })

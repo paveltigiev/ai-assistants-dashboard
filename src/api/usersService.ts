@@ -58,3 +58,19 @@ export const updateUserProfile = async (user: UserProfile) => {
     return null
   }
 }
+
+export const deleteUserProfile = async (user_id: number) => {
+  try {
+    const { error } = await supabase
+      .from("user_profiles")
+      .delete()
+      .eq("id", user_id)
+
+    if (error) throw error
+
+    return true
+  } catch (error) {
+    console.log((error as Error).message)
+    return false
+  }
+}

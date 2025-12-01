@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from "vue"
 import { useChatStore } from "@/store/chatStore"
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from "@/store/userStore"
 import { useForm, useField } from 'vee-validate'
 import { z } from 'zod'
@@ -47,6 +47,7 @@ import type { DateValue } from '@internationalized/date'
 import { useSettingsStore } from '@/store/settingsStore'
 
 const route = useRoute()
+const router = useRouter()
 const userId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
 const chatStore = useChatStore()
 const userStore = useUserStore()
@@ -125,6 +126,20 @@ const onSubmit = async () => {
   }
 }
 
+const deleteUser = async () => {
+  if (!userProfile.value) return
+  const confirmed = window.confirm('Вы уверены, что хотите удалить этого пользователя? Действие необратимо.')
+  if (!confirmed) return
+
+  const success = await userStore.deleteUserProfile(userProfile.value.id)
+  if (success) {
+    router.push('/users')
+  } else {
+    // опционально можно добавить toast/alert
+    console.error('Не удалось удалить пользователя')
+  }
+}
+
 watch(() => settingsStore.currentWorkspace, async () => {
   await chatStore.setChat(userProfile.value?.telegram_id || 0)
 })
@@ -179,10 +194,16 @@ onMounted(async () => {
               <span>{{ userProfile?.role }}</span>
             </div>
 
-            <Button @click="editUser" class="" size="xs" variant="outline">
-              <Icon icon="heroicons:pencil" class="" />
-              Редактировать
-            </Button>
+            <div class="flex gap-2 mt-2">
+              <Button @click="editUser" size="xs" variant="outline">
+                <Icon icon="heroicons:pencil" class="mr-1" />
+                Редактировать
+              </Button>
+              <Button @click="deleteUser" size="xs" variant="destructive">
+                <Icon icon="heroicons:trash" class="mr-1" />
+                Удалить
+              </Button>
+            </div>
           </div>
 
         </CardContent>
